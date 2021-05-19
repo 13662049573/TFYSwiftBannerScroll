@@ -7,14 +7,21 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		36BC1121265547A900B0FFE9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36BC1120265547A900B0FFE9 /* AppDelegate.swift */; };
-		36BC1123265547A900B0FFE9 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36BC1122265547A900B0FFE9 /* SceneDelegate.swift */; };
-		36BC1125265547A900B0FFE9 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36BC1124265547A900B0FFE9 /* ViewController.swift */; };
 		36BC1128265547A900B0FFE9 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 36BC1126265547A900B0FFE9 /* Main.storyboard */; };
 		36BC112A265547AB00B0FFE9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 36BC1129265547AB00B0FFE9 /* Assets.xcassets */; };
 		36BC112D265547AB00B0FFE9 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 36BC112B265547AB00B0FFE9 /* LaunchScreen.storyboard */; };
 		36BC1138265547AB00B0FFE9 /* TFYSwiftBannerScrollTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36BC1137265547AB00B0FFE9 /* TFYSwiftBannerScrollTests.swift */; };
 		36BC1143265547AB00B0FFE9 /* TFYSwiftBannerScrollUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36BC1142265547AB00B0FFE9 /* TFYSwiftBannerScrollUITests.swift */; };
+		36BC11562655480200B0FFE9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36BC11512655480200B0FFE9 /* AppDelegate.swift */; };
+		36BC11572655480200B0FFE9 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36BC11522655480200B0FFE9 /* SceneDelegate.swift */; };
+		36BC11582655480200B0FFE9 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36BC11542655480200B0FFE9 /* ViewController.swift */; };
+		36BC115A2655487A00B0FFE9 /* TFYSwiftPageControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36BC11592655487A00B0FFE9 /* TFYSwiftPageControl.swift */; };
+		36BC115C26554A1E00B0FFE9 /* TFYSwiftPagerCollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36BC115B26554A1E00B0FFE9 /* TFYSwiftPagerCollectionView.swift */; };
+		36BC115E26554A6800B0FFE9 /* TFYSwiftPagerViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36BC115D26554A6800B0FFE9 /* TFYSwiftPagerViewCell.swift */; };
+		36BC116026554AC200B0FFE9 /* TFYSwiftPagerViewLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36BC115F26554AC200B0FFE9 /* TFYSwiftPagerViewLayout.swift */; };
+		36BC116226554B9700B0FFE9 /* TFYSwiftPagerViewTransformer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36BC116126554B9700B0FFE9 /* TFYSwiftPagerViewTransformer.swift */; };
+		36BC116426554CA600B0FFE9 /* TFYSwiftPagerViewLayoutAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36BC116326554CA600B0FFE9 /* TFYSwiftPagerViewLayoutAttributes.swift */; };
+		36BC116626554D3300B0FFE9 /* TFYSwiftPagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36BC116526554D3300B0FFE9 /* TFYSwiftPagerView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -36,9 +43,6 @@
 
 /* Begin PBXFileReference section */
 		36BC111D265547A900B0FFE9 /* TFYSwiftBannerScroll.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TFYSwiftBannerScroll.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		36BC1120265547A900B0FFE9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		36BC1122265547A900B0FFE9 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
-		36BC1124265547A900B0FFE9 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		36BC1127265547A900B0FFE9 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		36BC1129265547AB00B0FFE9 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		36BC112C265547AB00B0FFE9 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -49,6 +53,16 @@
 		36BC113E265547AB00B0FFE9 /* TFYSwiftBannerScrollUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TFYSwiftBannerScrollUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		36BC1142265547AB00B0FFE9 /* TFYSwiftBannerScrollUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TFYSwiftBannerScrollUITests.swift; sourceTree = "<group>"; };
 		36BC1144265547AB00B0FFE9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		36BC11512655480200B0FFE9 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		36BC11522655480200B0FFE9 /* SceneDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		36BC11542655480200B0FFE9 /* ViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		36BC11592655487A00B0FFE9 /* TFYSwiftPageControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TFYSwiftPageControl.swift; sourceTree = "<group>"; };
+		36BC115B26554A1E00B0FFE9 /* TFYSwiftPagerCollectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TFYSwiftPagerCollectionView.swift; sourceTree = "<group>"; };
+		36BC115D26554A6800B0FFE9 /* TFYSwiftPagerViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TFYSwiftPagerViewCell.swift; sourceTree = "<group>"; };
+		36BC115F26554AC200B0FFE9 /* TFYSwiftPagerViewLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TFYSwiftPagerViewLayout.swift; sourceTree = "<group>"; };
+		36BC116126554B9700B0FFE9 /* TFYSwiftPagerViewTransformer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TFYSwiftPagerViewTransformer.swift; sourceTree = "<group>"; };
+		36BC116326554CA600B0FFE9 /* TFYSwiftPagerViewLayoutAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TFYSwiftPagerViewLayoutAttributes.swift; sourceTree = "<group>"; };
+		36BC116526554D3300B0FFE9 /* TFYSwiftPagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TFYSwiftPagerView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -99,9 +113,9 @@
 		36BC111F265547A900B0FFE9 /* TFYSwiftBannerScroll */ = {
 			isa = PBXGroup;
 			children = (
-				36BC1120265547A900B0FFE9 /* AppDelegate.swift */,
-				36BC1122265547A900B0FFE9 /* SceneDelegate.swift */,
-				36BC1124265547A900B0FFE9 /* ViewController.swift */,
+				36BC11502655480200B0FFE9 /* AppDelegate */,
+				36BC11532655480200B0FFE9 /* Class */,
+				36BC11552655480200B0FFE9 /* TFYSwiftBannerScrollKit */,
 				36BC1126265547A900B0FFE9 /* Main.storyboard */,
 				36BC1129265547AB00B0FFE9 /* Assets.xcassets */,
 				36BC112B265547AB00B0FFE9 /* LaunchScreen.storyboard */,
@@ -126,6 +140,37 @@
 				36BC1144265547AB00B0FFE9 /* Info.plist */,
 			);
 			path = TFYSwiftBannerScrollUITests;
+			sourceTree = "<group>";
+		};
+		36BC11502655480200B0FFE9 /* AppDelegate */ = {
+			isa = PBXGroup;
+			children = (
+				36BC11512655480200B0FFE9 /* AppDelegate.swift */,
+				36BC11522655480200B0FFE9 /* SceneDelegate.swift */,
+			);
+			path = AppDelegate;
+			sourceTree = "<group>";
+		};
+		36BC11532655480200B0FFE9 /* Class */ = {
+			isa = PBXGroup;
+			children = (
+				36BC11542655480200B0FFE9 /* ViewController.swift */,
+			);
+			path = Class;
+			sourceTree = "<group>";
+		};
+		36BC11552655480200B0FFE9 /* TFYSwiftBannerScrollKit */ = {
+			isa = PBXGroup;
+			children = (
+				36BC11592655487A00B0FFE9 /* TFYSwiftPageControl.swift */,
+				36BC115B26554A1E00B0FFE9 /* TFYSwiftPagerCollectionView.swift */,
+				36BC115D26554A6800B0FFE9 /* TFYSwiftPagerViewCell.swift */,
+				36BC115F26554AC200B0FFE9 /* TFYSwiftPagerViewLayout.swift */,
+				36BC116126554B9700B0FFE9 /* TFYSwiftPagerViewTransformer.swift */,
+				36BC116326554CA600B0FFE9 /* TFYSwiftPagerViewLayoutAttributes.swift */,
+				36BC116526554D3300B0FFE9 /* TFYSwiftPagerView.swift */,
+			);
+			path = TFYSwiftBannerScrollKit;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -190,6 +235,7 @@
 		36BC1115265547A900B0FFE9 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				CLASSPREFIX = TFYSwift;
 				LastSwiftUpdateCheck = 1250;
 				LastUpgradeCheck = 1250;
 				TargetAttributes = {
@@ -258,9 +304,16 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				36BC1125265547A900B0FFE9 /* ViewController.swift in Sources */,
-				36BC1121265547A900B0FFE9 /* AppDelegate.swift in Sources */,
-				36BC1123265547A900B0FFE9 /* SceneDelegate.swift in Sources */,
+				36BC11582655480200B0FFE9 /* ViewController.swift in Sources */,
+				36BC11572655480200B0FFE9 /* SceneDelegate.swift in Sources */,
+				36BC116226554B9700B0FFE9 /* TFYSwiftPagerViewTransformer.swift in Sources */,
+				36BC116426554CA600B0FFE9 /* TFYSwiftPagerViewLayoutAttributes.swift in Sources */,
+				36BC116626554D3300B0FFE9 /* TFYSwiftPagerView.swift in Sources */,
+				36BC115E26554A6800B0FFE9 /* TFYSwiftPagerViewCell.swift in Sources */,
+				36BC115A2655487A00B0FFE9 /* TFYSwiftPageControl.swift in Sources */,
+				36BC11562655480200B0FFE9 /* AppDelegate.swift in Sources */,
+				36BC115C26554A1E00B0FFE9 /* TFYSwiftPagerCollectionView.swift in Sources */,
+				36BC116026554AC200B0FFE9 /* TFYSwiftPagerViewLayout.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
