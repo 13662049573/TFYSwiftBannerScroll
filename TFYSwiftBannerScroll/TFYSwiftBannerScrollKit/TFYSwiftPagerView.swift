@@ -112,7 +112,7 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
         }
     }
     
-    /// 布尔值指示页导航视图是否有无限项。默认是假的。
+    /// 布尔值指示页导航视图是否有无限项。默认是 false。
     open var isInfinite: Bool = false {
         didSet {
             self.collectionViewLayout.needsReprepare = true
