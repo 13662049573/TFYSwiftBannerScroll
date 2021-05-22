@@ -284,7 +284,7 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
         let label = UILabel(frame: self.contentView.bounds)
         label.textAlignment = .center
         label.font = UIFont.boldSystemFont(ofSize: 25)
-        label.text = "FSPagerView"
+        label.text = "TFYSwiftPagerView"
         self.contentView.addSubview(label)
     }
     

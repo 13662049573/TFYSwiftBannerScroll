@@ -26,19 +26,19 @@ class ViewController: UIViewController {
                     "name": "POP退出"
                 ],
                 [
-                    "name": "卡片线性"
+                    "name": "卡片线性 -- 不支持垂直动画"
                 ],
                 [
-                    "name": "卡片重叠"
+                    "name": "卡片重叠 -- 不支持垂直动画"
                 ],
                 [
-                    "name": "上步扇形"
+                    "name": "上步扇形 -- 不支持垂直动画"
                 ],
                 [
-                    "name": "下部扇形"
+                    "name": "下部扇形 -- 不支持垂直动画"
                 ],
                 [
-                    "name": "内部折叠"
+                    "name": "内部折叠 -- 不支持垂直动画"
                 ],
                 [
                     "name": "立体旋转"
@@ -55,7 +55,7 @@ class ViewController: UIViewController {
                     "name": "居中"
                 ],
                 [
-                    "name": "右边"
+                    "name": "左边"
                 ]
             ]
         ],
@@ -95,10 +95,21 @@ class ViewController: UIViewController {
                     "name": "指示器间距"
                 ]
             ]
+        ],
+        [
+            "name": "视图滚动方向 -- 有的动画不支持垂直",
+            "items": [
+                [
+                    "name": "水平"
+                ],
+                [
+                    "name": "垂直"
+                ]
+            ]
         ]
     ]
     
-    fileprivate let imageNames = ["1.jpg","2.jpg","3.jpg","4.jpg","5.jpg","6.jpg","7.jpg"]
+    fileprivate let imageNames = ["1.jpg","2.jpg","3.jpg","4.jpg","5.jpg","6.jpg","7.jpg","01.jpg","02.jpg","03.jpg","04.jpg","05.jpg","06.jpg"]
     fileprivate var numberOfItems = 7
     fileprivate let transformerTypes: [PagerViewTransformerType] = [.crossFading,
                                                                       .zoomOut,
@@ -110,17 +121,7 @@ class ViewController: UIViewController {
                                                                       .coverFlow,
                                                                       .cubic]
     
-    lazy var tabbleView: UITableView = {
-        var tableview = UITableView(frame: CGRect(x: 0, y: 200, width: W_W, height: H_H - 200), style: .grouped)
-        tableview.showsVerticalScrollIndicator = false
-        tableview.showsHorizontalScrollIndicator = false
-        tableview.backgroundColor = .white
-        tableview.delegate = self
-        tableview.dataSource = self
-        return tableview
-    }()
-    
-    
+   
     lazy var pageView: TFYSwiftPagerView = {
         var pageView = TFYSwiftPagerView(frame: CGRect(x: 0, y: 0, width: W_W, height: 200))
         pageView.register(TFYSwiftPagerViewCell.self, forCellWithReuseIdentifier: "pageCell")
@@ -129,7 +130,6 @@ class ViewController: UIViewController {
         pageView.dataSource = self
         pageView.isInfinite = true
         pageView.automaticSlidingInterval = 3
-       
         return pageView
     }()
     
@@ -141,6 +141,16 @@ class ViewController: UIViewController {
         pageControl.contentInsets = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
         pageControl.hidesForSinglePage = true
         return pageControl
+    }()
+    
+    lazy var tabbleView: UITableView = {
+        var tableview = UITableView(frame: CGRect(x: 0, y: pageView.frame.maxY, width: W_W, height: H_H - 200), style: .grouped)
+        tableview.showsVerticalScrollIndicator = false
+        tableview.showsHorizontalScrollIndicator = false
+        tableview.backgroundColor = .white
+        tableview.delegate = self
+        tableview.dataSource = self
+        return tableview
     }()
     
     lazy var slider: UISlider = {
@@ -234,8 +244,8 @@ class ViewController: UIViewController {
                 self.pageControl.setFillColor(.green, for: .selected)
             case 2:
                 // Image
-                self.pageControl.setImage(UIImage(named:"icon_footprint"), for: .normal)
-                self.pageControl.setImage(UIImage(named:"icon_cat"), for: .selected)
+                self.pageControl.setImage(UIImage(named:"normalImage"), for: .normal)
+                self.pageControl.setImage(UIImage(named:"currentImage"), for: .selected)
             case 3:
                 // UIBezierPath - Star
                 self.pageControl.setStrokeColor(.yellow, for: .normal)
@@ -358,6 +368,7 @@ extension ViewController: UITableViewDataSource {
         let label = UILabel()
         label.backgroundColor = .orange
         label.text = (name as! String)
+        label.font = UIFont.systemFont(ofSize: 13)
         label.textAlignment = .center
         return label
     }
@@ -373,6 +384,7 @@ extension ViewController: UITableViewDataSource {
             cell = UITableViewCell(style: .subtitle, reuseIdentifier: "cell\(String(describing: name))")
         }
         cell?.textLabel?.text = name
+        cell?.textLabel?.font = UIFont.systemFont(ofSize: 14)
         cell!.accessoryType = UITableViewCell.AccessoryType.disclosureIndicator
         if indexPath.section == 3 {
             cell!.selectionStyle = UITableViewCell.SelectionStyle.none
@@ -399,6 +411,10 @@ extension ViewController: UITableViewDataSource {
         }
         if indexPath.section == 2 {
             self.styleIndex = indexPath.row
+        }
+        if indexPath.section == 4 {
+            self.pageView.scrollDirection = indexPath.row == 0 ? .horizontal : .vertical
+            self.pageView.reloadData()
         }
         if let visibleRows = tableView.indexPathsForVisibleRows {
             tableView.reloadRows(at: visibleRows, with: .automatic)
@@ -428,7 +444,7 @@ extension ViewController: UITableViewDataSource {
 }
 
 
-// MARK:- TFYSwiftPagerView DataSource
+// MARK:- TFYSwiftPagerView <DataSource Delegate>
 
 extension ViewController: TFYSwiftPagerViewDataSource,TFYSwiftPagerViewDelegate {
     
@@ -443,8 +459,7 @@ extension ViewController: TFYSwiftPagerViewDataSource,TFYSwiftPagerViewDelegate 
         cell.imageView?.image = UIImage(named: imageNames[index])
         cell.imageView?.contentMode = .scaleAspectFill
         cell.imageView?.clipsToBounds = true
-        cell.textLabel?.text = "阿克苏高卡夫卡挂靠费轧空广发卡开发岗按时卡死阿嘎嘎奥格控股安康AKG===:\(index)"
-        cell.textLabel?.numberOfLines = 0
+        cell.textLabel?.text = "这是一个测试标题:\(index)"
         return cell
     }
     
