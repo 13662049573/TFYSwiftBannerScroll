@@ -9,8 +9,8 @@ import UIKit
 
 class ViewController: UIViewController {
 
-    let W_W = UIScreen.main.bounds.size.width
-    let H_H = UIScreen.main.bounds.size.height
+   private let W_W = UIScreen.main.bounds.size.width
+   private let H_H = UIScreen.main.bounds.size.height
     
     fileprivate let dataSouce = [
         [
@@ -123,7 +123,7 @@ class ViewController: UIViewController {
     
    
     lazy var pageView: TFYSwiftPagerView = {
-        var pageView = TFYSwiftPagerView(frame: CGRect(x: 0, y: 0, width: W_W, height: 200))
+        var pageView = TFYSwiftPagerView(frame: CGRect(x: 0, y: 88, width: W_W, height: 200))
         pageView.register(TFYSwiftPagerViewCell.self, forCellWithReuseIdentifier: "pageCell")
         pageView.itemSize = TFYSwiftPagerView.automaticSize
         pageView.delegate = self
@@ -144,7 +144,7 @@ class ViewController: UIViewController {
     }()
     
     lazy var tabbleView: UITableView = {
-        var tableview = UITableView(frame: CGRect(x: 0, y: pageView.frame.maxY, width: W_W, height: H_H - 200), style: .grouped)
+        var tableview = UITableView(frame: CGRect(x: 0, y: pageView.frame.maxY, width: W_W, height: H_H - 200 - 88), style: .grouped)
         tableview.showsVerticalScrollIndicator = false
         tableview.showsHorizontalScrollIndicator = false
         tableview.backgroundColor = .white
@@ -468,6 +468,8 @@ extension ViewController: TFYSwiftPagerViewDataSource,TFYSwiftPagerViewDelegate 
     func pagerView(_ pagerView: TFYSwiftPagerView, didSelectItemAt index: Int) {
         pagerView.deselectItem(at: index, animated: true)
         pagerView.scrollToItem(at: index, animated: true)
+        let vc: UIViewController = TFYSwiftCustomController()
+        self.navigationController?.pushViewController(vc, animated: true)
     }
     
     func pagerViewWillEndDragging(_ pagerView: TFYSwiftPagerView, targetIndex: Int) {

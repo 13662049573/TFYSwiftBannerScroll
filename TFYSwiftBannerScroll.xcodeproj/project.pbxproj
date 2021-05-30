@@ -7,7 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		36BC1128265547A900B0FFE9 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 36BC1126265547A900B0FFE9 /* Main.storyboard */; };
+		367C0FE8266334BD00BAB242 /* TFYSwiftCustomController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 367C0FE7266334BD00BAB242 /* TFYSwiftCustomController.swift */; };
+		367C0FEA2663371900BAB242 /* TFYSwiftCustomViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 367C0FE92663371900BAB242 /* TFYSwiftCustomViewCell.swift */; };
 		36BC112A265547AB00B0FFE9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 36BC1129265547AB00B0FFE9 /* Assets.xcassets */; };
 		36BC112D265547AB00B0FFE9 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 36BC112B265547AB00B0FFE9 /* LaunchScreen.storyboard */; };
 		36BC1138265547AB00B0FFE9 /* TFYSwiftBannerScrollTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36BC1137265547AB00B0FFE9 /* TFYSwiftBannerScrollTests.swift */; };
@@ -42,8 +43,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		367C0FE7266334BD00BAB242 /* TFYSwiftCustomController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TFYSwiftCustomController.swift; sourceTree = "<group>"; };
+		367C0FE92663371900BAB242 /* TFYSwiftCustomViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TFYSwiftCustomViewCell.swift; sourceTree = "<group>"; };
 		36BC111D265547A900B0FFE9 /* TFYSwiftBannerScroll.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TFYSwiftBannerScroll.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		36BC1127265547A900B0FFE9 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		36BC1129265547AB00B0FFE9 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		36BC112C265547AB00B0FFE9 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		36BC112E265547AB00B0FFE9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -116,7 +118,6 @@
 				36BC11502655480200B0FFE9 /* AppDelegate */,
 				36BC11532655480200B0FFE9 /* Class */,
 				36BC11552655480200B0FFE9 /* TFYSwiftBannerScrollKit */,
-				36BC1126265547A900B0FFE9 /* Main.storyboard */,
 				36BC1129265547AB00B0FFE9 /* Assets.xcassets */,
 				36BC112B265547AB00B0FFE9 /* LaunchScreen.storyboard */,
 				36BC112E265547AB00B0FFE9 /* Info.plist */,
@@ -155,6 +156,8 @@
 			isa = PBXGroup;
 			children = (
 				36BC11542655480200B0FFE9 /* ViewController.swift */,
+				367C0FE7266334BD00BAB242 /* TFYSwiftCustomController.swift */,
+				367C0FE92663371900BAB242 /* TFYSwiftCustomViewCell.swift */,
 			);
 			path = Class;
 			sourceTree = "<group>";
@@ -279,7 +282,6 @@
 			files = (
 				36BC112D265547AB00B0FFE9 /* LaunchScreen.storyboard in Resources */,
 				36BC112A265547AB00B0FFE9 /* Assets.xcassets in Resources */,
-				36BC1128265547A900B0FFE9 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -309,9 +311,11 @@
 				36BC116226554B9700B0FFE9 /* TFYSwiftPagerViewTransformer.swift in Sources */,
 				36BC116426554CA600B0FFE9 /* TFYSwiftPagerViewLayoutAttributes.swift in Sources */,
 				36BC116626554D3300B0FFE9 /* TFYSwiftPagerView.swift in Sources */,
+				367C0FE8266334BD00BAB242 /* TFYSwiftCustomController.swift in Sources */,
 				36BC115E26554A6800B0FFE9 /* TFYSwiftPagerViewCell.swift in Sources */,
 				36BC115A2655487A00B0FFE9 /* TFYSwiftPageControl.swift in Sources */,
 				36BC11562655480200B0FFE9 /* AppDelegate.swift in Sources */,
+				367C0FEA2663371900BAB242 /* TFYSwiftCustomViewCell.swift in Sources */,
 				36BC115C26554A1E00B0FFE9 /* TFYSwiftPagerCollectionView.swift in Sources */,
 				36BC116026554AC200B0FFE9 /* TFYSwiftPagerViewLayout.swift in Sources */,
 			);
@@ -349,14 +353,6 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
-		36BC1126265547A900B0FFE9 /* Main.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				36BC1127265547A900B0FFE9 /* Base */,
-			);
-			name = Main.storyboard;
-			sourceTree = "<group>";
-		};
 		36BC112B265547AB00B0FFE9 /* LaunchScreen.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
