@@ -150,6 +150,9 @@ class ViewController: UIViewController {
         tableview.backgroundColor = .white
         tableview.delegate = self
         tableview.dataSource = self
+        if #available(iOS 15.0, *) {
+            tableview.sectionHeaderTopPadding = 0
+        } 
         return tableview
     }()
     
