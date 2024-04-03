@@ -492,10 +492,10 @@ extension NSObject {
     
     private var dataSouce: NSDictionary {
         set {
-            objc_setAssociatedObject(self, &(associatedKey.key), newValue, objc_AssociationPolicy.OBJC_ASSOCIATION_COPY)
+            objc_setAssociatedObject(self, (associatedKey.key), newValue, objc_AssociationPolicy.OBJC_ASSOCIATION_COPY)
         }
         get {
-            return (objc_getAssociatedObject(self, &(associatedKey.key)) as? NSDictionary)!
+            return (objc_getAssociatedObject(self, (associatedKey.key)) as? NSDictionary)!
 
         }
     }
