@@ -487,15 +487,15 @@ extension ViewController: TFYSwiftPagerViewDataSource,TFYSwiftPagerViewDelegate 
 extension NSObject {
     
     struct associatedKey {
-         static var key = "xz_badge"
+         static var key = UnsafeRawPointer(bitPattern: "xz_badge".hashValue)!
     }
     
     private var dataSouce: NSDictionary {
         set {
-            objc_setAssociatedObject(self, (associatedKey.key), newValue, objc_AssociationPolicy.OBJC_ASSOCIATION_COPY)
+            objc_setAssociatedObject(self, associatedKey.key, newValue, objc_AssociationPolicy.OBJC_ASSOCIATION_COPY)
         }
         get {
-            return (objc_getAssociatedObject(self, (associatedKey.key)) as? NSDictionary)!
+            return (objc_getAssociatedObject(self, associatedKey.key) as? NSDictionary)!
 
         }
     }
