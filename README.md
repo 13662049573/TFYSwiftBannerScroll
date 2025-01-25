@@ -51,7 +51,7 @@ TFYSwiftBannerScroll 是一个功能强大且高度可定制的 iOS 轮播图组
 - iOS 15.0+
 - Swift 5.0+
 - Xcode 14.0+
-    
+
 ## 📲 安装
 
 ### CocoaPods
@@ -204,7 +204,7 @@ open TFYSwiftBannerScroll.xcworkspace
 
 ## 🔨 更新日志
 
-### 1.0.0
+### 2.0.5
 - 初始版本发布
 - 支持基础轮播功能
 - 添加多种转场动画
