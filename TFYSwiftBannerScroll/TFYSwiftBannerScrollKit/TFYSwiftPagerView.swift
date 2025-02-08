@@ -119,8 +119,8 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
             self.collectionView.reloadData()
         }
     }
-    
-    /// 一个无符号整数值，确定寻呼机视图的减速距离，它指示减速期间传递的项目数。当此属性的值为TFYSwiftPagerView时。automaticDistance，实际的“距离”是根据页导航视图的滚动速度自动计算的。默认值为1。
+
+    /// 一个无符号整数值，确定寻呼机视图的减速距离，它指示减速期间传递的项目数。当此属性的值为TFYSwiftPagerView时。automaticDistance，实际的"距离"是根据页导航视图的滚动速度自动计算的。默认值为1。
     open var decelerationDistance: UInt = 1
     
     /// 一个布尔值，决定是否启用滚动。
@@ -173,6 +173,20 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
         didSet {
             self.transformer?.pagerView = self
             self.collectionViewLayout.forceInvalidate()
+        }
+    }
+    
+    @objc open var parallaxFactor: CGFloat = 0.5 {
+        didSet {
+            self.transformer?.parallaxFactor = parallaxFactor
+            self.reloadData()
+        }
+    }
+
+    @objc open var rotationAngle: CGFloat = .pi/2 {
+        didSet {
+            self.transformer?.rotationAngle = rotationAngle
+            self.reloadData()
         }
     }
     
@@ -596,6 +610,17 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
         } else {
             return IndexPath(item: index, section: currentSection+1)
         }
+    }
+
+    @objc
+    open func configureGridLayout(rows: Int, columns: Int, spacing: CGFloat) {
+        guard let transformer = self.transformer, transformer.type == .grid else {
+            return
+        }
+        transformer.gridRows = rows
+        transformer.gridColumns = columns 
+        transformer.gridSpacing = spacing
+        self.reloadData()
     }
 
 }

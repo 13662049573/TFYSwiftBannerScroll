@@ -58,6 +58,12 @@ open class TFYSwiftPageControl: UIControl {
         }
     }
     
+    @objc open var isHiddenInGridMode: Bool = true {
+        didSet {
+            self.setNeedsUpdateIndicators()
+        }
+    }
+    
     internal var strokeColors: [UIControl.State: UIColor] = [:]
     internal var fillColors: [UIControl.State: UIColor] = [:]
     internal var paths: [UIControl.State: UIBezierPath] = [:]

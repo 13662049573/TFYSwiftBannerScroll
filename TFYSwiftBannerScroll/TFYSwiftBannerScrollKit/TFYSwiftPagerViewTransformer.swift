@@ -18,6 +18,18 @@ public enum PagerViewTransformerType: Int {
     case ferrisWheel
     case invertedFerrisWheel
     case cubic
+    case rotate3D
+    case parallax
+    case springy
+    case flip
+    case cards
+    case cylinder
+    case wave
+    case windmill
+    case accordion
+    case carousel
+    case stack
+    case grid  // 新增网格布局效果
 }
 
 open class TFYSwiftPagerViewTransformer: NSObject {
@@ -27,6 +39,21 @@ open class TFYSwiftPagerViewTransformer: NSObject {
     
     @objc open var minimumScale: CGFloat = 0.65
     @objc open var minimumAlpha: CGFloat = 0.6
+    @objc open var perspective: CGFloat = -0.002  // 3D透视参数
+    @objc open var springDamping: CGFloat = 0.8   // 弹性动画阻尼系数
+    @objc open var parallaxFactor: CGFloat = 0.5  // 视差强度系数
+    @objc open var rotationAngle: CGFloat = .pi/2 // 3D旋转角度基数
+    @objc open var waveHeight: CGFloat = 50.0  // 波浪效果的高度
+    @objc open var cylinderRadius: CGFloat = 200.0  // 圆柱体效果的半径
+    @objc open var flipAngle: CGFloat = .pi  // 翻转角度
+    @objc open var cardSpacing: CGFloat = 10.0  // 卡片间距
+    @objc open var windmillSpeed: CGFloat = 1.0    // 风车旋转速度
+    @objc open var accordionFactor: CGFloat = 0.8  // 手风琴折叠系数
+    @objc open var carouselRadius: CGFloat = 300.0 // 旋转木马半径
+    @objc open var stackOffset: CGFloat = 8.0      // 堆叠偏移量
+    @objc open var gridRows: Int = 2     // 网格行数
+    @objc open var gridColumns: Int = 3   // 网格列数
+    @objc open var gridSpacing: CGFloat = 10.0  // 网格间距
     
     @objc
     public init(type: PagerViewTransformerType) {
@@ -230,6 +257,216 @@ open class TFYSwiftPagerViewTransformer: NSObject {
                 attributes.alpha = 0
                 attributes.zIndex = 0
             }
+        case .rotate3D:  // 新增3D旋转效果
+            let angle = position * rotationAngle
+                var transform3D = CATransform3DIdentity
+                transform3D.m34 = perspective
+                switch scrollDirection {
+                case .horizontal:
+                    transform3D = CATransform3DRotate(transform3D, angle, 0, 1, 0)
+                case .vertical:
+                    transform3D = CATransform3DRotate(transform3D, angle, 1, 0, 0)
+                }
+                attributes.transform3D = transform3D
+        case .parallax:  // 新增视差滚动效果
+            let parallaxFactor = self.parallaxFactor
+           var transform = CGAffineTransform.identity
+           switch scrollDirection {
+           case .horizontal:
+               let offset = attributes.bounds.width * parallaxFactor * position
+               transform.tx = offset
+           case .vertical:
+               let offset = attributes.bounds.height * parallaxFactor * position
+               transform.ty = offset
+           }
+           attributes.transform = transform
+            
+        case .springy:  // 新增弹性效果
+            let scale = 1 - min(abs(position) * 0.3, 0.3)
+            let translationX = scrollDirection == .horizontal ? itemSpacing * position : 0
+            let translationY = scrollDirection == .vertical ? itemSpacing * position : 0
+            let transform = CGAffineTransform(scaleX: scale, y: scale)
+                .translatedBy(x: translationX, y: translationY)
+                .scaledBy(x: 1 + springDamping * abs(position),
+                         y: 1 + springDamping * abs(position))
+            attributes.transform = transform
+            attributes.alpha = 1 - abs(position)/3
+        case .flip:  // 3D翻转效果
+            var transform3D = CATransform3DIdentity
+            transform3D.m34 = perspective
+            let angle = position * flipAngle
+            switch scrollDirection {
+            case .horizontal:
+                transform3D = CATransform3DRotate(transform3D, angle, 0, 1, 0)
+            case .vertical:
+                transform3D = CATransform3DRotate(transform3D, angle, 1, 0, 0)
+            }
+            attributes.transform3D = transform3D
+            attributes.alpha = abs(position) <= 1 ? 1.0 : 0.0
+        case .cards:  // 卡片堆叠效果
+            let scale = 1 - abs(position) * 0.2
+            let translation = cardSpacing * position
+            var transform = CGAffineTransform.identity
+                .scaledBy(x: scale, y: scale)
+            
+            switch scrollDirection {
+            case .horizontal:
+                transform = transform.translatedBy(x: translation, y: 0)
+            case .vertical:
+                transform = transform.translatedBy(x: 0, y: translation)
+            }
+            
+            attributes.transform = transform
+            attributes.zIndex = Int(100 - abs(position * 10))
+            attributes.alpha = 1 - abs(position) * 0.5
+            
+        case .cylinder:  // 圆柱体效果
+            var transform3D = CATransform3DIdentity
+            transform3D.m34 = perspective
+            
+            let angle = position * .pi / 4
+            let radius = cylinderRadius
+            
+            switch scrollDirection {
+            case .horizontal:
+                let translateX = radius * sin(angle)
+                let translateZ = radius * (1 - cos(angle))
+                transform3D = CATransform3DTranslate(transform3D, translateX, 0, -translateZ)
+                transform3D = CATransform3DRotate(transform3D, angle, 0, 1, 0)
+            case .vertical:
+                let translateY = radius * sin(angle)
+                let translateZ = radius * (1 - cos(angle))
+                transform3D = CATransform3DTranslate(transform3D, 0, translateY, -translateZ)
+                transform3D = CATransform3DRotate(transform3D, angle, 1, 0, 0)
+            }
+            
+            attributes.transform3D = transform3D
+            attributes.alpha = 1 - min(abs(position) * 0.5, 0.5)
+            
+        case .wave:  // 波浪效果
+            var transform = CGAffineTransform.identity
+            let phase = position * .pi * 2
+            let y = waveHeight * sin(phase)
+            let scale = 1 - abs(position) * 0.2
+            
+            transform = transform
+                .translatedBy(x: 0, y: y)
+                .scaledBy(x: scale, y: scale)
+            
+            switch scrollDirection {
+            case .horizontal:
+                transform = transform.translatedBy(x: position * itemSpacing, y: 0)
+            case .vertical:
+                transform = transform.translatedBy(x: 0, y: position * itemSpacing)
+            }
+            
+            attributes.transform = transform
+            attributes.alpha = 1 - abs(position) * 0.3
+            attributes.zIndex = Int(100 - abs(position * 10))
+        case .windmill:  // 风车旋转效果
+            var transform = CGAffineTransform.identity
+            let angle = position * .pi * windmillSpeed
+            transform = transform.rotated(by: angle)
+            
+            switch scrollDirection {
+            case .horizontal:
+                transform = transform.translatedBy(x: position * itemSpacing, y: 0)
+            case .vertical:
+                transform = transform.translatedBy(x: 0, y: position * itemSpacing)
+            }
+            
+            attributes.transform = transform
+            attributes.alpha = 1 - min(abs(position) * 0.6, 0.6)
+            attributes.zIndex = Int(10 - abs(position))
+        case .accordion:  // 手风琴折叠效果
+            var transform = CGAffineTransform.identity
+            let scale = max(1 - abs(position) * accordionFactor, 0.2)
+            
+            switch scrollDirection {
+            case .horizontal:
+                transform = transform.scaledBy(x: scale, y: 1.0)
+                transform = transform.translatedBy(x: position * itemSpacing, y: 0)
+            case .vertical:
+                transform = transform.scaledBy(x: 1.0, y: scale)
+                transform = transform.translatedBy(x: 0, y: position * itemSpacing)
+            }
+            
+            attributes.transform = transform
+            attributes.alpha = 1 - min(abs(position) * 0.5, 0.5)
+            
+        case .carousel:  // 旋转木马效果
+            var transform3D = CATransform3DIdentity
+            transform3D.m34 = perspective
+            
+            let angle = position * .pi / 3
+            let radius = carouselRadius
+            let translateZ = -radius * cos(angle)
+            
+            switch scrollDirection {
+            case .horizontal:
+                let translateX = radius * sin(angle)
+                transform3D = CATransform3DTranslate(transform3D, translateX, 0, translateZ)
+            case .vertical:
+                let translateY = radius * sin(angle)
+                transform3D = CATransform3DTranslate(transform3D, 0, translateY, translateZ)
+            }
+            
+            attributes.transform3D = transform3D
+            attributes.alpha = 1 - min(abs(position) * 0.7, 0.7)
+            attributes.zIndex = Int(100 - abs(position * 20))
+            
+        case .stack:  // 堆叠效果
+            var transform = CGAffineTransform.identity
+            let offset = stackOffset * position
+            
+            switch scrollDirection {
+            case .horizontal:
+                transform = transform.translatedBy(x: offset, y: abs(offset))
+            case .vertical:
+                transform = transform.translatedBy(x: abs(offset), y: offset)
+            }
+            
+            let scale = 1 - min(abs(position) * 0.1, 0.1)
+            transform = transform.scaledBy(x: scale, y: scale)
+            
+            attributes.transform = transform
+            attributes.alpha = 1 - min(abs(position) * 0.4, 0.4)
+            attributes.zIndex = Int(10 - abs(position))
+        case .grid:  // 网格布局效果
+            var transform = CGAffineTransform.identity
+            
+            // 计算每个item在网格中的位置
+            let totalItems = gridRows * gridColumns
+            let itemIndex = Int(abs(position)) % totalItems
+            let row = itemIndex / gridColumns
+            let column = itemIndex % gridColumns
+            
+            // 计算目标位置
+            let itemWidth = attributes.bounds.width
+            let itemHeight = attributes.bounds.height
+            
+            let targetX = CGFloat(column) * (itemWidth + gridSpacing)
+            let targetY = CGFloat(row) * (itemHeight + gridSpacing)
+            
+            // 计算当前位置到目标位置的过渡
+            let progress = abs(position.truncatingRemainder(dividingBy: 1.0))
+            
+            let currentX = position * itemSpacing
+            let currentY = 0.0
+            
+            // 在当前位置和目标位置之间进行插值
+            let translateX = currentX + (targetX - currentX) * progress
+            let translateY = currentY + (targetY - currentY) * progress
+            
+            transform = transform.translatedBy(x: translateX, y: translateY)
+            
+            // 缩放效果
+            let scale = 1.0 / CGFloat(max(gridRows, gridColumns))
+            transform = transform.scaledBy(x: scale, y: scale)
+            
+            attributes.transform = transform
+            attributes.alpha = 1.0
+            attributes.zIndex = totalItems - itemIndex
         }
     }
     
@@ -262,6 +499,52 @@ open class TFYSwiftPagerViewTransformer: NSObject {
             return -pagerView.itemSize.width * 0.15
         case .cubic:
             return 0
+        case .rotate3D:
+            return scrollDirection == .horizontal ?
+                -pagerView.itemSize.width * 0.2 :
+                -pagerView.itemSize.height * 0.2
+        case .parallax:
+            return scrollDirection == .horizontal ?
+                pagerView.itemSize.width * 0.1 :
+                pagerView.itemSize.height * 0.1
+        case .springy:
+            return scrollDirection == .horizontal ?
+                pagerView.itemSize.width * 0.3 :
+                pagerView.itemSize.height * 0.3
+        case .flip:
+            return scrollDirection == .horizontal ?
+                -pagerView.itemSize.width * 0.3 :
+                -pagerView.itemSize.height * 0.3
+        case .cards:
+            return cardSpacing
+        case .cylinder:
+            return scrollDirection == .horizontal ?
+                -pagerView.itemSize.width * 0.2 :
+                -pagerView.itemSize.height * 0.2
+        case .wave:
+            return scrollDirection == .horizontal ?
+                pagerView.itemSize.width * 0.1 :
+                pagerView.itemSize.height * 0.1
+        case .windmill:
+            return scrollDirection == .horizontal ?
+                pagerView.itemSize.width * 0.15 :
+                pagerView.itemSize.height * 0.15
+        case .accordion:
+            return scrollDirection == .horizontal ?
+                -pagerView.itemSize.width * 0.5 :
+                -pagerView.itemSize.height * 0.5
+        case .carousel:
+            return scrollDirection == .horizontal ?
+                pagerView.itemSize.width * 0.2 :
+                pagerView.itemSize.height * 0.2
+        case .stack:
+            return scrollDirection == .horizontal ?
+                -pagerView.itemSize.width * 0.8 :
+                -pagerView.itemSize.height * 0.8
+        case .grid:
+            return scrollDirection == .horizontal ?
+                (pagerView.itemSize.width + gridSpacing) / CGFloat(gridColumns) :
+                (pagerView.itemSize.height + gridSpacing) / CGFloat(gridRows)
         default:
             break
         }

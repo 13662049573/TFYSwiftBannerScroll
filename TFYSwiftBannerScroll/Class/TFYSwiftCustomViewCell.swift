@@ -40,6 +40,10 @@ public class TFYSwiftCustomViewCell: TFYSwiftPagerViewCell {
     
     override init(frame: CGRect) {
         super.init(frame: frame)
+        contentView.layer.cornerRadius = 25
+        contentView.layer.masksToBounds = true
+        contentView.layer.borderWidth = 6
+        contentView.layer.borderColor = UIColor.red.cgColor
         
         contentView.addSubview(icoimageView)
         icoimageView.addSubview(label)

@@ -147,4 +147,12 @@ open class TFYSwiftPagerViewCell: UICollectionViewCell {
             super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
         }
     }
+    
+    open override func prepareForReuse() {
+        super.prepareForReuse()
+        self.transform = .identity
+        self.transform3D = CATransform3DIdentity
+        self.alpha = 1.0
+        self.layer.zPosition = 0
+    }
 }

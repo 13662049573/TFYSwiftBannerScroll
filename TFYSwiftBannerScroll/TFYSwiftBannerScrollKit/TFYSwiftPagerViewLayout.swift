@@ -67,34 +67,40 @@ class TFYSwiftPagerViewLayout: UICollectionViewLayout {
             return size
         }()
         
-        self.actualInteritemSpacing = {
-            if let transformer = pagerView.transformer {
-                return transformer.proposedInteritemSpacing()
-            }
-            return pagerView.interitemSpacing
-        }()
-        self.scrollDirection = pagerView.scrollDirection
-        self.leadingSpacing = self.scrollDirection == .horizontal ? (collectionView.frame.width-self.actualItemSize.width)*0.5 : (collectionView.frame.height-self.actualItemSize.height)*0.5
-        self.itemSpacing = (self.scrollDirection == .horizontal ? self.actualItemSize.width : self.actualItemSize.height) + self.actualInteritemSpacing
-        
-        // 计算并缓存contentSize，而不是每次都计算
-        self.contentSize = {
-            let numberOfItems = self.numberOfItems*self.numberOfSections
-            switch self.scrollDirection {
-                case .horizontal:
-                    var contentSizeWidth: CGFloat = self.leadingSpacing*2 // 前尾间距
-                    contentSizeWidth += CGFloat(numberOfItems-1)*self.actualInteritemSpacing // Interitem间距
-                    contentSizeWidth += CGFloat(numberOfItems)*self.actualItemSize.width // 项目大小
-                    let contentSize = CGSize(width: contentSizeWidth, height: collectionView.frame.height)
-                    return contentSize
-                case .vertical:
-                    var contentSizeHeight: CGFloat = self.leadingSpacing*2 // 前尾间距
-                    contentSizeHeight += CGFloat(numberOfItems-1)*self.actualInteritemSpacing // Interitem间距
-                    contentSizeHeight += CGFloat(numberOfItems)*self.actualItemSize.height // 项目大小
-                    let contentSize = CGSize(width: collectionView.frame.width, height: contentSizeHeight)
-                    return contentSize
-            }
-        }()
+        // 检查是否是网格布局，如果是则调整布局
+        if let transformer = pagerView.transformer, transformer.type == .grid {
+            self.adjustLayoutForGridMode()
+        } else {
+            // 原有的布局计算逻辑
+            self.actualInteritemSpacing = {
+                if let transformer = pagerView.transformer {
+                    return transformer.proposedInteritemSpacing()
+                }
+                return pagerView.interitemSpacing
+            }()
+            self.scrollDirection = pagerView.scrollDirection
+            self.leadingSpacing = self.scrollDirection == .horizontal ? (collectionView.frame.width-self.actualItemSize.width)*0.5 : (collectionView.frame.height-self.actualItemSize.height)*0.5
+            self.itemSpacing = (self.scrollDirection == .horizontal ? self.actualItemSize.width : self.actualItemSize.height) + self.actualInteritemSpacing
+            
+            // 计算并缓存contentSize，而不是每次都计算
+            self.contentSize = {
+                let numberOfItems = self.numberOfItems*self.numberOfSections
+                switch self.scrollDirection {
+                    case .horizontal:
+                        var contentSizeWidth: CGFloat = self.leadingSpacing*2 // 前尾间距
+                        contentSizeWidth += CGFloat(numberOfItems-1)*self.actualInteritemSpacing // Interitem间距
+                        contentSizeWidth += CGFloat(numberOfItems)*self.actualItemSize.width // 项目大小
+                        let contentSize = CGSize(width: contentSizeWidth, height: collectionView.frame.height)
+                        return contentSize
+                    case .vertical:
+                        var contentSizeHeight: CGFloat = self.leadingSpacing*2 // 前尾间距
+                        contentSizeHeight += CGFloat(numberOfItems-1)*self.actualInteritemSpacing // Interitem间距
+                        contentSizeHeight += CGFloat(numberOfItems)*self.actualItemSize.height // 项目大小
+                        let contentSize = CGSize(width: collectionView.frame.width, height: contentSizeHeight)
+                        return contentSize
+                }
+            }()
+        }
         self.adjustCollectionViewBounds()
     }
     
@@ -107,34 +113,50 @@ class TFYSwiftPagerViewLayout: UICollectionViewLayout {
     }
     
     override open func layoutAttributesForElements(in rect: CGRect) -> [UICollectionViewLayoutAttributes]? {
-        var layoutAttributes = [UICollectionViewLayoutAttributes]()
-        guard self.itemSpacing > 0, !rect.isEmpty else {
+        guard let collectionView = self.collectionView, let pagerView = self.pagerView else {
+            return nil
+        }
+        
+        let transformer = pagerView.transformer
+        if transformer?.type == .grid {
+            // 获取网格布局的所有可见 cell 的布局属性
+            let visibleItems = super.layoutAttributesForElements(in: rect) ?? []
+            visibleItems.forEach { attributes in
+                if let attributes = attributes as? TFYSwiftPagerViewLayoutAttributes {
+                    self.applyTransform(to: attributes, with: transformer)
+                }
+            }
+            return visibleItems
+        } else {
+            // 原有的布局属性计算逻辑
+            var layoutAttributes = [UICollectionViewLayoutAttributes]()
+            guard self.itemSpacing > 0, !rect.isEmpty else {
+                return layoutAttributes
+            }
+            let rect = rect.intersection(CGRect(origin: .zero, size: self.contentSize))
+            guard !rect.isEmpty else {
+                return layoutAttributes
+            }
+            // 计算某些矩形的起始位置和索引
+            let numberOfItemsBefore = self.scrollDirection == .horizontal ? max(Int((rect.minX-self.leadingSpacing)/self.itemSpacing),0) : max(Int((rect.minY-self.leadingSpacing)/self.itemSpacing),0)
+            let startPosition = self.leadingSpacing + CGFloat(numberOfItemsBefore)*self.itemSpacing
+            let startIndex = numberOfItemsBefore
+            // 创建布局属性
+            var itemIndex = startIndex
+            
+            var origin = startPosition
+            let maxPosition = self.scrollDirection == .horizontal ? min(rect.maxX,self.contentSize.width-self.actualItemSize.width-self.leadingSpacing) : min(rect.maxY,self.contentSize.height-self.actualItemSize.height-self.leadingSpacing)
+           
+            while origin-maxPosition <= max(CGFloat(100.0) * .ulpOfOne * abs(origin+maxPosition), .leastNonzeroMagnitude) {
+                let indexPath = IndexPath(item: itemIndex%self.numberOfItems, section: itemIndex/self.numberOfItems)
+                let attributes = self.layoutAttributesForItem(at: indexPath) as! TFYSwiftPagerViewLayoutAttributes
+                self.applyTransform(to: attributes, with: transformer)
+                layoutAttributes.append(attributes)
+                itemIndex += 1
+                origin += self.itemSpacing
+            }
             return layoutAttributes
         }
-        let rect = rect.intersection(CGRect(origin: .zero, size: self.contentSize))
-        guard !rect.isEmpty else {
-            return layoutAttributes
-        }
-        // 计算某些矩形的起始位置和索引
-        let numberOfItemsBefore = self.scrollDirection == .horizontal ? max(Int((rect.minX-self.leadingSpacing)/self.itemSpacing),0) : max(Int((rect.minY-self.leadingSpacing)/self.itemSpacing),0)
-        let startPosition = self.leadingSpacing + CGFloat(numberOfItemsBefore)*self.itemSpacing
-        let startIndex = numberOfItemsBefore
-        // 创建布局属性
-        var itemIndex = startIndex
-        
-        var origin = startPosition
-        let maxPosition = self.scrollDirection == .horizontal ? min(rect.maxX,self.contentSize.width-self.actualItemSize.width-self.leadingSpacing) : min(rect.maxY,self.contentSize.height-self.actualItemSize.height-self.leadingSpacing)
-       
-        while origin-maxPosition <= max(CGFloat(100.0) * .ulpOfOne * abs(origin+maxPosition), .leastNonzeroMagnitude) {
-            let indexPath = IndexPath(item: itemIndex%self.numberOfItems, section: itemIndex/self.numberOfItems)
-            let attributes = self.layoutAttributesForItem(at: indexPath) as! TFYSwiftPagerViewLayoutAttributes
-            self.applyTransform(to: attributes, with: self.pagerView?.transformer)
-            layoutAttributes.append(attributes)
-            itemIndex += 1
-            origin += self.itemSpacing
-        }
-        return layoutAttributes
-        
     }
     
     override open func layoutAttributesForItem(at indexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
@@ -288,5 +310,24 @@ class TFYSwiftPagerViewLayout: UICollectionViewLayout {
         }
         attributes.zIndex = Int(self.numberOfItems)-Int(attributes.position)
         transformer.applyTransform(to: attributes)
+    }
+    
+    internal func adjustLayoutForGridMode() {
+        guard let pagerView = self.pagerView,
+              let transformer = pagerView.transformer,
+              transformer.type == .grid else {
+            return
+        }
+        
+        let rows = transformer.gridRows
+        let columns = transformer.gridColumns
+        let spacing = transformer.gridSpacing
+        
+        // 调整 ContentSize 以适应网格布局
+        let totalWidth = CGFloat(columns) * (pagerView.itemSize.width + spacing) - spacing
+        let totalHeight = CGFloat(rows) * (pagerView.itemSize.height + spacing) - spacing
+        
+        self.contentSize = CGSize(width: max(totalWidth, pagerView.bounds.width),
+                                 height: max(totalHeight, pagerView.bounds.height))
     }
 }
