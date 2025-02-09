@@ -461,7 +461,7 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
     /// - Parameters:
     ///   - identifier: 指定单元格的重用标识符。此参数不能为空。
     ///   - index: 指定单元格位置的索引。
-    /// - Returns: 有效的FSPagerViewCell对象。
+    /// - Returns: 有效的TFYSwiftPagerViewCell对象。
     @objc(dequeueReusableCellWithReuseIdentifier:atIndex:)
     open func dequeueReusableCell(withReuseIdentifier identifier: String, at index: Int) -> TFYSwiftPagerViewCell {
         let indexPath = IndexPath(item: index, section: self.dequeingSection)
