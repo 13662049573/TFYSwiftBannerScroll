@@ -8,7 +8,7 @@
 import UIKit
 
 class ViewController: UIViewController {
-    
+
     // MARK: - Constants
     private let screenWidth = UIScreen.main.bounds.size.width
     private let screenHeight = UIScreen.main.bounds.size.height
@@ -218,7 +218,7 @@ class ViewController: UIViewController {
         setupUI()
         configureInitialState()
     }
-    
+        
     // MARK: - Private Methods
     private func setupUI() {
         view.backgroundColor = .white
@@ -356,10 +356,31 @@ extension ViewController: UITableViewDataSource, UITableViewDelegate {
             let transformer = TFYSwiftPagerViewTransformer(type: type)
             
             if type == .grid {
+                // 配置网格布局
                 pageView.configureGridLayout(rows: 2, columns: 3, spacing: 10)
+                
+                // 隐藏页面指示器
                 pageControl.isHiddenInGridMode = true
+                
+                // 重置内边距和大小
+                pageView.collectionView.contentInset = .zero
+                pageView.itemSize = pageView.bounds.size
+                
+                // 禁用自动滚动
+                pageView.automaticSlidingInterval = 0
+                
+                // 启用分页
+                pageView.collectionView.isPagingEnabled = true
+                
+                // 更新布局
+                pageView.collectionViewLayout.invalidateLayout()
+                pageView.reloadData()
             } else {
+                // 恢复正常布局
                 pageControl.isHiddenInGridMode = false
+                pageView.itemSize = CGSize(width: screenWidth - 100, height: screenHeight/3 - 40)
+                pageView.collectionView.contentInset = UIEdgeInsets(top: 0, left: 50, bottom: 0, right: 50)
+                pageView.collectionView.isPagingEnabled = false
             }
             
             pageView.transformer = transformer

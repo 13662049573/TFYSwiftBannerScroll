@@ -461,7 +461,7 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
     /// - Parameters:
     ///   - identifier: 指定单元格的重用标识符。此参数不能为空。
     ///   - index: 指定单元格位置的索引。
-    /// - Returns: 有效的TFYSwiftPagerViewCell对象。
+    /// - Returns: 有效的FSPagerViewCell对象。
     @objc(dequeueReusableCellWithReuseIdentifier:atIndex:)
     open func dequeueReusableCell(withReuseIdentifier identifier: String, at index: Int) -> TFYSwiftPagerViewCell {
         let indexPath = IndexPath(item: index, section: self.dequeingSection)
@@ -617,10 +617,24 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
         guard let transformer = self.transformer, transformer.type == .grid else {
             return
         }
+        
+        // 更新网格参数
         transformer.gridRows = rows
-        transformer.gridColumns = columns 
+        transformer.gridColumns = columns
         transformer.gridSpacing = spacing
+        
+        // 调整collection view的布局
+        self.collectionViewLayout.needsReprepare = true
+        
+        // 禁用无限滚动
+        self.isInfinite = false
+        
+        // 更新布局
+        self.collectionViewLayout.invalidateLayout()
         self.reloadData()
+        
+        // 确保第一个item可见
+        self.scrollToItem(at: 0, animated: false)
     }
 
 }

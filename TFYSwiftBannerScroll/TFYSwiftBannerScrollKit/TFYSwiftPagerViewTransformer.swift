@@ -433,40 +433,10 @@ open class TFYSwiftPagerViewTransformer: NSObject {
             attributes.alpha = 1 - min(abs(position) * 0.4, 0.4)
             attributes.zIndex = Int(10 - abs(position))
         case .grid:  // 网格布局效果
-            var transform = CGAffineTransform.identity
-            
-            // 计算每个item在网格中的位置
-            let totalItems = gridRows * gridColumns
-            let itemIndex = Int(abs(position)) % totalItems
-            let row = itemIndex / gridColumns
-            let column = itemIndex % gridColumns
-            
-            // 计算目标位置
-            let itemWidth = attributes.bounds.width
-            let itemHeight = attributes.bounds.height
-            
-            let targetX = CGFloat(column) * (itemWidth + gridSpacing)
-            let targetY = CGFloat(row) * (itemHeight + gridSpacing)
-            
-            // 计算当前位置到目标位置的过渡
-            let progress = abs(position.truncatingRemainder(dividingBy: 1.0))
-            
-            let currentX = position * itemSpacing
-            let currentY = 0.0
-            
-            // 在当前位置和目标位置之间进行插值
-            let translateX = currentX + (targetX - currentX) * progress
-            let translateY = currentY + (targetY - currentY) * progress
-            
-            transform = transform.translatedBy(x: translateX, y: translateY)
-            
-            // 缩放效果
-            let scale = 1.0 / CGFloat(max(gridRows, gridColumns))
-            transform = transform.scaledBy(x: scale, y: scale)
-            
-            attributes.transform = transform
+            // 网格模式下不需要特殊的变换效果
             attributes.alpha = 1.0
-            attributes.zIndex = totalItems - itemIndex
+            attributes.transform = .identity
+            attributes.zIndex = 0
         }
     }
     

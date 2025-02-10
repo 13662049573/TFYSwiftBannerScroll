@@ -67,7 +67,6 @@ class TFYSwiftPagerViewLayout: UICollectionViewLayout {
             return size
         }()
         
-        // 检查是否是网格布局，如果是则调整布局
         if let transformer = pagerView.transformer, transformer.type == .grid {
             self.adjustLayoutForGridMode()
         } else {
@@ -113,20 +112,90 @@ class TFYSwiftPagerViewLayout: UICollectionViewLayout {
     }
     
     override open func layoutAttributesForElements(in rect: CGRect) -> [UICollectionViewLayoutAttributes]? {
-        guard let collectionView = self.collectionView, let pagerView = self.pagerView else {
-            return nil
+        guard let collectionView = self.collectionView,
+              let pagerView = self.pagerView,
+              let transformer = pagerView.transformer else {
+            return super.layoutAttributesForElements(in: rect)
         }
         
-        let transformer = pagerView.transformer
-        if transformer?.type == .grid {
-            // 获取网格布局的所有可见 cell 的布局属性
-            let visibleItems = super.layoutAttributesForElements(in: rect) ?? []
-            visibleItems.forEach { attributes in
-                if let attributes = attributes as? TFYSwiftPagerViewLayoutAttributes {
-                    self.applyTransform(to: attributes, with: transformer)
+        if transformer.type == .grid {
+            var layoutAttributes = [UICollectionViewLayoutAttributes]()
+            let numberOfItems = collectionView.numberOfItems(inSection: 0)
+            guard numberOfItems > 0 else { return layoutAttributes }
+            
+            let rows = transformer.gridRows
+            let columns = transformer.gridColumns
+            let spacing = transformer.gridSpacing
+            let itemsPerPage = rows * columns
+            
+            // 计算当前可见的页面范围
+            let pageWidth = collectionView.bounds.width
+            let pageHeight = collectionView.bounds.height
+            
+            // 计算总页数
+            let totalPages = Int(ceil(Double(numberOfItems) / Double(itemsPerPage)))
+            
+            // 计算可见页面范围
+            let minPage: Int
+            let maxPage: Int
+            
+            switch pagerView.scrollDirection {
+            case .horizontal:
+                minPage = max(Int(floor(rect.minX / pageWidth)), 0)
+                maxPage = min(Int(ceil(rect.maxX / pageWidth)), totalPages - 1)
+            case .vertical:
+                minPage = max(Int(floor(rect.minY / pageHeight)), 0)
+                maxPage = min(Int(ceil(rect.maxY / pageHeight)), totalPages - 1)
+            }
+            
+            // 确保页面范围有效
+            guard minPage <= maxPage else { return layoutAttributes }
+            
+            // 遍历可见页面范围内的所有item
+            for page in minPage...maxPage {
+                let startIndex = page * itemsPerPage
+                let endIndex = min(startIndex + itemsPerPage, numberOfItems)
+                
+                // 确保索引范围有效
+                guard startIndex < numberOfItems && startIndex < endIndex else { continue }
+                
+                for index in startIndex..<endIndex {
+                    // 计算item在当前页面内的行列位置
+                    let localIndex = index - startIndex
+                    let row = localIndex / columns
+                    let column = localIndex % columns
+                    
+                    // 计算item的frame
+                    let frame: CGRect
+                    switch pagerView.scrollDirection {
+                    case .horizontal:
+                        let x = CGFloat(page) * pageWidth + CGFloat(column) * (self.actualItemSize.width + spacing)
+                        let y = CGFloat(row) * (self.actualItemSize.height + spacing)
+                        frame = CGRect(x: x, y: y,
+                                     width: self.actualItemSize.width,
+                                     height: self.actualItemSize.height)
+                    case .vertical:
+                        let x = CGFloat(column) * (self.actualItemSize.width + spacing)
+                        let y = CGFloat(page) * pageHeight + CGFloat(row) * (self.actualItemSize.height + spacing)
+                        frame = CGRect(x: x, y: y,
+                                     width: self.actualItemSize.width,
+                                     height: self.actualItemSize.height)
+                    }
+                    
+                    if frame.intersects(rect) {
+                        let indexPath = IndexPath(item: index, section: 0)
+                        let attributes = TFYSwiftPagerViewLayoutAttributes(forCellWith: indexPath)
+                        attributes.frame = frame
+                        
+                        // 设置position用于动画
+                        attributes.position = CGFloat(page)
+                        
+                        layoutAttributes.append(attributes)
+                    }
                 }
             }
-            return visibleItems
+            
+            return layoutAttributes
         } else {
             // 原有的布局属性计算逻辑
             var layoutAttributes = [UICollectionViewLayoutAttributes]()
@@ -323,11 +392,38 @@ class TFYSwiftPagerViewLayout: UICollectionViewLayout {
         let columns = transformer.gridColumns
         let spacing = transformer.gridSpacing
         
-        // 调整 ContentSize 以适应网格布局
-        let totalWidth = CGFloat(columns) * (pagerView.itemSize.width + spacing) - spacing
-        let totalHeight = CGFloat(rows) * (pagerView.itemSize.height + spacing) - spacing
+        // 计算每页可以显示的总item数
+        let itemsPerPage = rows * columns
         
-        self.contentSize = CGSize(width: max(totalWidth, pagerView.bounds.width),
-                                 height: max(totalHeight, pagerView.bounds.height))
+        // 计算item的实际大小，考虑容器大小和间距
+        let containerWidth = pagerView.bounds.width
+        let containerHeight = pagerView.bounds.height
+        
+        let itemWidth = (containerWidth - (CGFloat(columns - 1) * spacing)) / CGFloat(columns)
+        let itemHeight = (containerHeight - (CGFloat(rows - 1) * spacing)) / CGFloat(rows)
+        
+        self.actualItemSize = CGSize(width: itemWidth, height: itemHeight)
+        self.actualInteritemSpacing = spacing
+        
+        // 计算总页数
+        let totalItems = CGFloat(self.numberOfItems)
+        let numberOfPages = ceil(totalItems / CGFloat(itemsPerPage))
+        
+        // 根据滚动方向设置 contentSize
+        switch pagerView.scrollDirection {
+        case .horizontal:
+            self.contentSize = CGSize(
+                width: containerWidth * numberOfPages,
+                height: containerHeight
+            )
+        case .vertical:
+            self.contentSize = CGSize(
+                width: containerWidth,
+                height: containerHeight * numberOfPages
+            )
+        }
+        
+        // 设置为0以避免自动居中
+        self.leadingSpacing = 0
     }
 }

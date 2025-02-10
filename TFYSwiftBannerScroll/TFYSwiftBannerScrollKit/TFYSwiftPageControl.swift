@@ -60,7 +60,8 @@ open class TFYSwiftPageControl: UIControl {
     
     @objc open var isHiddenInGridMode: Bool = true {
         didSet {
-            self.setNeedsUpdateIndicators()
+            self.isHidden = isHiddenInGridMode
+            self.setNeedsLayout()
         }
     }
     

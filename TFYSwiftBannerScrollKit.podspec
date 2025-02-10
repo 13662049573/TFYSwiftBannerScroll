@@ -3,7 +3,7 @@ Pod::Spec.new do |spec|
 
   spec.name         = "TFYSwiftBannerScrollKit"
 
-  spec.version      = "2.0.5"
+  spec.version      = "2.0.6"
 
   spec.summary      = "
   Swift版的 无线滚动。自定义cell,自定义圆点，支持常用的卡片类型，满足现在项目所有需求。最低支持iOS15 Swift5 以上"
