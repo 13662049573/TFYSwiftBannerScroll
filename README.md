@@ -203,6 +203,38 @@ open TFYSwiftBannerScroll.xcworkspace
 ```
 
 ## 🔨 更新日志
+### 2.0.6
+- 修复自动滚动问题
+- 修复分页问题
+- 修复其他问题
+
+### 2.0.5
+- 初始版本发布
+- 支持基础轮播功能
+- 添加多种转场动画：
+  ```swift
+  case crossFading       // 渐变淡出效果
+  case zoomOut           // 缩小淡出效果  
+  case depth             // 立体深度效果
+  case overlap           // 卡片重叠效果
+  case linear            // 线性滑动效果
+  case coverFlow         // 封面流效果
+  case ferrisWheel       // 摩天轮效果
+  case invertedFerrisWheel // 反向摩天轮效果
+  case cubic             // 3D立方体效果
+  case rotate3D          // 3D旋转效果
+  case parallax          // 视差滚动效果
+  case springy           // 弹性动画效果
+  case flip              // 页面翻转效果  
+  case cards             // 层叠卡片效果
+  case cylinder          // 圆柱体排列效果
+  case wave              // 波浪起伏效果
+  case windmill          // 风车旋转效果
+  case accordion         // 手风琴折叠效果
+  case carousel          // 旋转木马效果
+  case stack             // 卡片堆叠效果
+  case grid              // 网格布局效果
+  ```
 
 ### 2.0.5
 - 初始版本发布

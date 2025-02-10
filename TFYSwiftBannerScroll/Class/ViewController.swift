@@ -364,8 +364,8 @@ extension ViewController: UITableViewDataSource, UITableViewDelegate {
                 pageControl.isHiddenInGridMode = true
                 
                 // 重置内边距和大小
-                pageView.collectionView.contentInset = .zero
-                pageView.itemSize = pageView.bounds.size
+//                pageView.collectionView.contentInset = .zero
+//                pageView.itemSize = pageView.bounds.size
                 
                 // 禁用自动滚动
                 pageView.automaticSlidingInterval = 0
