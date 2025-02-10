@@ -102,6 +102,7 @@ class ViewController: UIViewController {
         view.dataSource = self
         view.delegate = self
         view.scrollDirection = .horizontal
+        view.automaticSlidingInterval = 3
         view.itemSize = CGSize(width: screenWidth - 100, height: screenHeight/3 - 40)
         view.register(TFYSwiftPagerViewCell.self, forCellWithReuseIdentifier: "pageCell")
         return view
