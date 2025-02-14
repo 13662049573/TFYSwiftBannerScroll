@@ -424,7 +424,6 @@ private extension ViewController {
         switch styleIndex {
         case 1: // Ring
             pageControl.setStrokeColor(.green, for: .normal)
-            pageControl.setStrokeColor(.green, for: .selected)
             pageControl.setFillColor(.green, for: .selected)
             
         case 2: // Image
