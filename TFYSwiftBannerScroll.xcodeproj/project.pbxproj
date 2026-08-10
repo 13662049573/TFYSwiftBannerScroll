@@ -7,15 +7,26 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		367C0FE8266334BD00BAB242 /* TFYSwiftCustomController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 367C0FE7266334BD00BAB242 /* TFYSwiftCustomController.swift */; };
-		367C0FEA2663371900BAB242 /* TFYSwiftCustomViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 367C0FE92663371900BAB242 /* TFYSwiftCustomViewCell.swift */; };
+		CEF7F5C5CADD48779D6E2727 /* DemoMenuViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E09844042AE84A60B1F47A42 /* DemoMenuViewController.swift */; };
+		094FB5F18A494552AE5BDE29 /* DemoImages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 460BD2A883A049DFAE7FCD6B /* DemoImages.swift */; };
+		0C96C1D23E04453E9C06E11A /* DemoPagerBaseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CDC93DCC320491A867E5F91 /* DemoPagerBaseViewController.swift */; };
+		D5DC0B2A454B4D6D8D0EABC3 /* DemoBannerCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2296DD5B90944EF6BABD2873 /* DemoBannerCell.swift */; };
+		870864A4DF98434CA9B1C5B3 /* BasicBannerDemoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAAA8C586FEB4FBA9248C662 /* BasicBannerDemoViewController.swift */; };
+		065909E087544EA599E27866 /* InfiniteAutoplayDemoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FE77EAAB11E45CEB8872BDC /* InfiniteAutoplayDemoViewController.swift */; };
+		D48B153BB5F04059A61E89D5 /* ScrollPhysicsDemoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48C34DE2BDC24D20B2ED6CFD /* ScrollPhysicsDemoViewController.swift */; };
+		739DDF10DFBE421D9B286CDF /* TransformersDemoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4548B4528F7B41B194A17AC7 /* TransformersDemoViewController.swift */; };
+		F2C3464CC4CD4326BB610DF5 /* VerticalScrollDemoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEFC405615AE4B31AFD8C81D /* VerticalScrollDemoViewController.swift */; };
+		7651B15DA13544C380CD427A /* GridLayoutDemoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC5D201740B945B68DE61DDB /* GridLayoutDemoViewController.swift */; };
+		F87B46CC16CD4F6C81E6CEC9 /* PageControlDemoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7C4890C1AD147DFA385B597 /* PageControlDemoViewController.swift */; };
+		BA73CDF1C5134E38AF6DF9B4 /* CustomCellDemoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5103AACE49DB405BAFE71BA0 /* CustomCellDemoViewController.swift */; };
+		061298AFB88A4E348B733A82 /* DelegateEventsDemoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB855A0C36E94DD9BCE202BE /* DelegateEventsDemoViewController.swift */; };
+		D828C85F2B414EFF95581A86 /* ChromeControlDemoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78650F8E1B414E75A375EF82 /* ChromeControlDemoViewController.swift */; };
 		36BC112A265547AB00B0FFE9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 36BC1129265547AB00B0FFE9 /* Assets.xcassets */; };
 		36BC112D265547AB00B0FFE9 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 36BC112B265547AB00B0FFE9 /* LaunchScreen.storyboard */; };
 		36BC1138265547AB00B0FFE9 /* TFYSwiftBannerScrollTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36BC1137265547AB00B0FFE9 /* TFYSwiftBannerScrollTests.swift */; };
 		36BC1143265547AB00B0FFE9 /* TFYSwiftBannerScrollUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36BC1142265547AB00B0FFE9 /* TFYSwiftBannerScrollUITests.swift */; };
 		36BC11562655480200B0FFE9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36BC11512655480200B0FFE9 /* AppDelegate.swift */; };
 		36BC11572655480200B0FFE9 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36BC11522655480200B0FFE9 /* SceneDelegate.swift */; };
-		36BC11582655480200B0FFE9 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36BC11542655480200B0FFE9 /* ViewController.swift */; };
 		36BC115A2655487A00B0FFE9 /* TFYSwiftPageControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36BC11592655487A00B0FFE9 /* TFYSwiftPageControl.swift */; };
 		36BC115C26554A1E00B0FFE9 /* TFYSwiftPagerCollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36BC115B26554A1E00B0FFE9 /* TFYSwiftPagerCollectionView.swift */; };
 		36BC115E26554A6800B0FFE9 /* TFYSwiftPagerViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36BC115D26554A6800B0FFE9 /* TFYSwiftPagerViewCell.swift */; };
@@ -43,8 +54,20 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		367C0FE7266334BD00BAB242 /* TFYSwiftCustomController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TFYSwiftCustomController.swift; sourceTree = "<group>"; };
-		367C0FE92663371900BAB242 /* TFYSwiftCustomViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TFYSwiftCustomViewCell.swift; sourceTree = "<group>"; };
+		E09844042AE84A60B1F47A42 /* DemoMenuViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoMenuViewController.swift; sourceTree = "<group>"; };
+		460BD2A883A049DFAE7FCD6B /* DemoImages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoImages.swift; sourceTree = "<group>"; };
+		1CDC93DCC320491A867E5F91 /* DemoPagerBaseViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoPagerBaseViewController.swift; sourceTree = "<group>"; };
+		2296DD5B90944EF6BABD2873 /* DemoBannerCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoBannerCell.swift; sourceTree = "<group>"; };
+		EAAA8C586FEB4FBA9248C662 /* BasicBannerDemoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BasicBannerDemoViewController.swift; sourceTree = "<group>"; };
+		0FE77EAAB11E45CEB8872BDC /* InfiniteAutoplayDemoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfiniteAutoplayDemoViewController.swift; sourceTree = "<group>"; };
+		48C34DE2BDC24D20B2ED6CFD /* ScrollPhysicsDemoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollPhysicsDemoViewController.swift; sourceTree = "<group>"; };
+		4548B4528F7B41B194A17AC7 /* TransformersDemoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransformersDemoViewController.swift; sourceTree = "<group>"; };
+		EEFC405615AE4B31AFD8C81D /* VerticalScrollDemoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerticalScrollDemoViewController.swift; sourceTree = "<group>"; };
+		FC5D201740B945B68DE61DDB /* GridLayoutDemoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridLayoutDemoViewController.swift; sourceTree = "<group>"; };
+		C7C4890C1AD147DFA385B597 /* PageControlDemoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageControlDemoViewController.swift; sourceTree = "<group>"; };
+		5103AACE49DB405BAFE71BA0 /* CustomCellDemoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomCellDemoViewController.swift; sourceTree = "<group>"; };
+		FB855A0C36E94DD9BCE202BE /* DelegateEventsDemoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DelegateEventsDemoViewController.swift; sourceTree = "<group>"; };
+		78650F8E1B414E75A375EF82 /* ChromeControlDemoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChromeControlDemoViewController.swift; sourceTree = "<group>"; };
 		36BC111D265547A900B0FFE9 /* TFYSwiftBannerScroll.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TFYSwiftBannerScroll.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		36BC1129265547AB00B0FFE9 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		36BC112C265547AB00B0FFE9 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -57,7 +80,6 @@
 		36BC1144265547AB00B0FFE9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		36BC11512655480200B0FFE9 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		36BC11522655480200B0FFE9 /* SceneDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
-		36BC11542655480200B0FFE9 /* ViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		36BC11592655487A00B0FFE9 /* TFYSwiftPageControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TFYSwiftPageControl.swift; sourceTree = "<group>"; };
 		36BC115B26554A1E00B0FFE9 /* TFYSwiftPagerCollectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TFYSwiftPagerCollectionView.swift; sourceTree = "<group>"; };
 		36BC115D26554A6800B0FFE9 /* TFYSwiftPagerViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TFYSwiftPagerViewCell.swift; sourceTree = "<group>"; };
@@ -152,12 +174,39 @@
 			path = AppDelegate;
 			sourceTree = "<group>";
 		};
-		36BC11532655480200B0FFE9 /* Class */ = {
+				8E2A4389CD7B452DA0034E75 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
-				36BC11542655480200B0FFE9 /* ViewController.swift */,
-				367C0FE7266334BD00BAB242 /* TFYSwiftCustomController.swift */,
-				367C0FE92663371900BAB242 /* TFYSwiftCustomViewCell.swift */,
+				460BD2A883A049DFAE7FCD6B /* DemoImages.swift */,
+				1CDC93DCC320491A867E5F91 /* DemoPagerBaseViewController.swift */,
+				2296DD5B90944EF6BABD2873 /* DemoBannerCell.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		C6E2E0F3115A4C0CABF569DF /* Scenes */ = {
+			isa = PBXGroup;
+			children = (
+				EAAA8C586FEB4FBA9248C662 /* BasicBannerDemoViewController.swift */,
+				0FE77EAAB11E45CEB8872BDC /* InfiniteAutoplayDemoViewController.swift */,
+				48C34DE2BDC24D20B2ED6CFD /* ScrollPhysicsDemoViewController.swift */,
+				4548B4528F7B41B194A17AC7 /* TransformersDemoViewController.swift */,
+				EEFC405615AE4B31AFD8C81D /* VerticalScrollDemoViewController.swift */,
+				FC5D201740B945B68DE61DDB /* GridLayoutDemoViewController.swift */,
+				C7C4890C1AD147DFA385B597 /* PageControlDemoViewController.swift */,
+				5103AACE49DB405BAFE71BA0 /* CustomCellDemoViewController.swift */,
+				FB855A0C36E94DD9BCE202BE /* DelegateEventsDemoViewController.swift */,
+				78650F8E1B414E75A375EF82 /* ChromeControlDemoViewController.swift */,
+			);
+			path = Scenes;
+			sourceTree = "<group>";
+		};
+36BC11532655480200B0FFE9 /* Class */ = {
+			isa = PBXGroup;
+			children = (
+				E09844042AE84A60B1F47A42 /* DemoMenuViewController.swift */,
+				8E2A4389CD7B452DA0034E75 /* Shared */,
+				C6E2E0F3115A4C0CABF569DF /* Scenes */,
 			);
 			path = Class;
 			sourceTree = "<group>";
@@ -307,16 +356,27 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				36BC11582655480200B0FFE9 /* ViewController.swift in Sources */,
 				36BC11572655480200B0FFE9 /* SceneDelegate.swift in Sources */,
 				36BC116226554B9700B0FFE9 /* TFYSwiftPagerViewTransformer.swift in Sources */,
 				36BC116426554CA600B0FFE9 /* TFYSwiftPagerViewLayoutAttributes.swift in Sources */,
 				36BC116626554D3300B0FFE9 /* TFYSwiftPagerView.swift in Sources */,
-				367C0FE8266334BD00BAB242 /* TFYSwiftCustomController.swift in Sources */,
+				CEF7F5C5CADD48779D6E2727 /* DemoMenuViewController.swift in Sources */,
+				094FB5F18A494552AE5BDE29 /* DemoImages.swift in Sources */,
+				0C96C1D23E04453E9C06E11A /* DemoPagerBaseViewController.swift in Sources */,
+				D5DC0B2A454B4D6D8D0EABC3 /* DemoBannerCell.swift in Sources */,
+				870864A4DF98434CA9B1C5B3 /* BasicBannerDemoViewController.swift in Sources */,
+				065909E087544EA599E27866 /* InfiniteAutoplayDemoViewController.swift in Sources */,
+				D48B153BB5F04059A61E89D5 /* ScrollPhysicsDemoViewController.swift in Sources */,
+				739DDF10DFBE421D9B286CDF /* TransformersDemoViewController.swift in Sources */,
+				F2C3464CC4CD4326BB610DF5 /* VerticalScrollDemoViewController.swift in Sources */,
+				7651B15DA13544C380CD427A /* GridLayoutDemoViewController.swift in Sources */,
+				F87B46CC16CD4F6C81E6CEC9 /* PageControlDemoViewController.swift in Sources */,
+				BA73CDF1C5134E38AF6DF9B4 /* CustomCellDemoViewController.swift in Sources */,
+				061298AFB88A4E348B733A82 /* DelegateEventsDemoViewController.swift in Sources */,
+				D828C85F2B414EFF95581A86 /* ChromeControlDemoViewController.swift in Sources */,
 				36BC115E26554A6800B0FFE9 /* TFYSwiftPagerViewCell.swift in Sources */,
 				36BC115A2655487A00B0FFE9 /* TFYSwiftPageControl.swift in Sources */,
 				36BC11562655480200B0FFE9 /* AppDelegate.swift in Sources */,
-				367C0FEA2663371900BAB242 /* TFYSwiftCustomViewCell.swift in Sources */,
 				36BC115C26554A1E00B0FFE9 /* TFYSwiftPagerCollectionView.swift in Sources */,
 				36BC116026554AC200B0FFE9 /* TFYSwiftPagerViewLayout.swift in Sources */,
 			);
@@ -532,7 +592,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = K5Z3S55G3K;
 				INFOPLIST_FILE = TFYSwiftBannerScrollTests/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -553,7 +613,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = K5Z3S55G3K;
 				INFOPLIST_FILE = TFYSwiftBannerScrollTests/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

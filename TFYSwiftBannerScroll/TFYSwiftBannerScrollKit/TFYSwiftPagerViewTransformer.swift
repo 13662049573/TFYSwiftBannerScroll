@@ -12,11 +12,11 @@ public enum PagerViewTransformerType: Int {
     case crossFading       // 渐变淡出效果
     case zoomOut           // 缩小淡出效果
     case depth             // 立体深度效果
-    case overlap           // 卡片重叠效果
-    case linear            // 线性滑动效果
-    case coverFlow         // 封面流效果
-    case ferrisWheel       // 摩天轮效果
-    case invertedFerrisWheel // 反向摩天轮效果
+    case overlap           // 卡片重叠效果（仅水平）
+    case linear            // 线性滑动效果（仅水平）
+    case coverFlow         // 封面流效果（仅水平）
+    case ferrisWheel       // 摩天轮效果（仅水平）
+    case invertedFerrisWheel // 反向摩天轮效果（仅水平）
     case cubic             // 3D立方体效果
     case rotate3D          // 3D旋转效果
     case parallax          // 视差滚动效果
@@ -30,6 +30,42 @@ public enum PagerViewTransformerType: Int {
     case carousel          // 旋转木马效果
     case stack             // 卡片堆叠效果
     case grid              // 网格布局效果
+    
+    /// 是否支持垂直滚动方向。
+    public var supportsVertical: Bool {
+        switch self {
+        case .overlap, .linear, .coverFlow, .ferrisWheel, .invertedFerrisWheel:
+            return false
+        default:
+            return true
+        }
+    }
+    
+    public var displayName: String {
+        switch self {
+        case .crossFading: return "渐变淡出"
+        case .zoomOut: return "缩小"
+        case .depth: return "深度"
+        case .overlap: return "卡片重叠"
+        case .linear: return "卡片线性"
+        case .coverFlow: return "封面流"
+        case .ferrisWheel: return "摩天轮"
+        case .invertedFerrisWheel: return "反向摩天轮"
+        case .cubic: return "立体立方"
+        case .rotate3D: return "3D旋转"
+        case .parallax: return "视差滚动"
+        case .springy: return "弹性"
+        case .flip: return "翻转"
+        case .cards: return "卡片层叠"
+        case .cylinder: return "圆柱体"
+        case .wave: return "波浪"
+        case .windmill: return "风车"
+        case .accordion: return "手风琴"
+        case .carousel: return "旋转木马"
+        case .stack: return "堆叠"
+        case .grid: return "网格"
+        }
+    }
 }
 
 open class TFYSwiftPagerViewTransformer: NSObject {

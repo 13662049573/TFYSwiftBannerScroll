@@ -51,26 +51,26 @@ open class TFYSwiftPageControl: UIControl {
         }
     }
     
-    /// 如果只有一个页面，则隐藏该指示器。默认是没有
+    /// 如果只有一个页面，则隐藏该指示器。默认是 false。
     open var hidesForSinglePage: Bool = false {
         didSet {
             self.setNeedsUpdateIndicators()
         }
     }
     
-    @objc open var isHiddenInGridMode: Bool = true {
+    /// 便捷隐藏开关（例如网格模式）。设置后会同步 `isHidden`。
+    @objc open var isHiddenInGridMode: Bool = false {
         didSet {
             self.isHidden = isHiddenInGridMode
             self.setNeedsLayout()
         }
     }
     
-    internal var strokeColors: [UIControl.State: UIColor] = [:]
-    internal var fillColors: [UIControl.State: UIColor] = [:]
-    internal var paths: [UIControl.State: UIBezierPath] = [:]
-    internal var images: [UIControl.State: UIImage] = [:]
-    internal var alphas: [UIControl.State: CGFloat] = [:]
-    internal var transforms: [UIControl.State: CGAffineTransform] = [:]
+    fileprivate var strokeColors: [UInt: UIColor] = [:]
+    fileprivate var fillColors: [UInt: UIColor] = [:]
+    fileprivate var paths: [UInt: UIBezierPath] = [:]
+    fileprivate var images: [UInt: UIImage] = [:]
+    fileprivate var alphas: [UInt: CGFloat] = [:]
     
     fileprivate weak var contentView: UIView!
     
@@ -95,8 +95,7 @@ open class TFYSwiftPageControl: UIControl {
             let y = self.contentInsets.top
             let width = self.frame.width - self.contentInsets.left - self.contentInsets.right
             let height = self.frame.height - self.contentInsets.top - self.contentInsets.bottom
-            let frame = CGRect(x: x, y: y, width: width, height: height)
-            return frame
+            return CGRect(x: x, y: y, width: width, height: height)
         }()
     }
     
@@ -111,106 +110,71 @@ open class TFYSwiftPageControl: UIControl {
                 return 0
             case .center, .fill:
                 let midX = self.contentView.bounds.midX
-                let amplitude = CGFloat(self.numberOfPages/2) * diameter + spacing*CGFloat((self.numberOfPages-1)/2)
+                let amplitude = CGFloat(self.numberOfPages / 2) * diameter + spacing * CGFloat((self.numberOfPages - 1) / 2)
                 return midX - amplitude
             case .right, .trailing:
-                let contentWidth = diameter*CGFloat(self.numberOfPages) + CGFloat(self.numberOfPages-1)*spacing
+                let contentWidth = diameter * CGFloat(self.numberOfPages) + CGFloat(self.numberOfPages - 1) * spacing
                 return contentView.frame.width - contentWidth
             default:
                 return 0
             }
         }()
-        for (index,value) in self.indicatorLayers.enumerated() {
+        for (index, value) in self.indicatorLayers.enumerated() {
             let state: UIControl.State = (index == self.currentPage) ? .selected : .normal
-            let image = self.images[state]
+            let image = self.images[state.rawValue]
             let size = image?.size ?? CGSize(width: diameter, height: diameter)
-            let origin = CGPoint(x: x - (size.width-diameter)*0.5, y: self.contentView.bounds.midY-size.height*0.5)
+            let origin = CGPoint(x: x - (size.width - diameter) * 0.5, y: self.contentView.bounds.midY - size.height * 0.5)
             value.frame = CGRect(origin: origin, size: size)
             x = x + spacing + diameter
         }
-        
     }
     
-    /// 设置用于指定状态的页面指示器的描边颜色。(选择/正常)。
-    ///
-    /// - Parameters:
-    ///   - strokeColor: 用于指定状态的描边颜色。
-    ///   - state: 使用指定描边颜色的状态。
     @objc(setStrokeColor:forState:)
     open func setStrokeColor(_ strokeColor: UIColor?, for state: UIControl.State) {
-        guard self.strokeColors[state] != strokeColor else {
-            return
-        }
-        self.strokeColors[state] = strokeColor
+        let key = state.rawValue
+        guard self.strokeColors[key] != strokeColor else { return }
+        self.strokeColors[key] = strokeColor
         self.setNeedsUpdateIndicators()
     }
     
-    /// 设置用于指定状态的页面指示器的填充颜色。(选择/正常)。
-    ///
-    /// - Parameters:
-    ///   - fillColor: 用于指定状态的填充颜色。
-    ///   - state: 使用指定填充颜色的状态。
     @objc(setFillColor:forState:)
     open func setFillColor(_ fillColor: UIColor?, for state: UIControl.State) {
-        guard self.fillColors[state] != fillColor else {
-            return
-        }
-        self.fillColors[state] = fillColor
+        let key = state.rawValue
+        guard self.fillColors[key] != fillColor else { return }
+        self.fillColors[key] = fillColor
         self.setNeedsUpdateIndicators()
     }
     
-    /// 设置用于指定状态的页面指示器的图像。(选择/正常)。
-    ///
-    /// - Parameters:
-    ///   - image: 用于指定状态的映像。
-    ///   - state: 使用指定映像的状态。
     @objc(setImage:forState:)
     open func setImage(_ image: UIImage?, for state: UIControl.State) {
-        guard self.images[state] != image else {
-            return
-        }
-        self.images[state] = image
+        let key = state.rawValue
+        guard self.images[key] != image else { return }
+        self.images[key] = image
         self.setNeedsUpdateIndicators()
     }
     
-    /// 设置用于指定状态的页面指示器的alpha值。(选择/正常)。
-    ///
-    /// - Parameters:
-    ///   - alpha: 用于指定状态的alpha值。
-    ///   - state: 使用指定alpha的状态。
     @objc(setAlpha:forState:)
     open func setAlpha(_ alpha: CGFloat, for state: UIControl.State) {
-        guard self.alphas[state] != alpha else {
-            return
-        }
-        self.alphas[state] = alpha
+        let key = state.rawValue
+        guard self.alphas[key] != alpha else { return }
+        self.alphas[key] = alpha
         self.setNeedsUpdateIndicators()
     }
     
-    /// 设置要用于指定状态的页面指示器的路径。(选择/正常)。
-    ///
-    /// - Parameters:
-    ///   - path: 用于指定状态的路径。
-    ///   - state: 使用指定路径的状态。
     @objc(setPath:forState:)
     open func setPath(_ path: UIBezierPath?, for state: UIControl.State) {
-        guard self.paths[state] != path else {
-            return
-        }
-        self.paths[state] = path
+        let key = state.rawValue
+        guard self.paths[key] != path else { return }
+        self.paths[key] = path
         self.setNeedsUpdateIndicators()
     }
     
-    // MARK: - 私有函数
     fileprivate func commonInit() {
-        
-        // 内容视图
         let view = UIView(frame: .zero)
-        view.backgroundColor = UIColor.clear
+        view.backgroundColor = .clear
         self.addSubview(view)
         self.contentView = view
         self.isUserInteractionEnabled = false
-        
     }
     
     fileprivate func setNeedsUpdateIndicators() {
@@ -222,16 +186,12 @@ open class TFYSwiftPageControl: UIControl {
     }
     
     fileprivate func updateIndicatorsIfNecessary() {
-        guard self.needsUpdateIndicators else {
-            return
-        }
-        guard self.indicatorLayers.count > 0 else {
-            return
-        }
+        guard self.needsUpdateIndicators else { return }
+        guard !self.indicatorLayers.isEmpty else { return }
         self.needsUpdateIndicators = false
         self.contentView.isHidden = self.hidesForSinglePage && self.numberOfPages <= 1
         if !self.contentView.isHidden {
-            self.indicatorLayers.forEach { (layer) in
+            self.indicatorLayers.forEach { layer in
                 layer.isHidden = false
                 self.updateIndicatorAttributes(for: layer)
             }
@@ -241,15 +201,16 @@ open class TFYSwiftPageControl: UIControl {
     fileprivate func updateIndicatorAttributes(for layer: CAShapeLayer) {
         let index = self.indicatorLayers.firstIndex(of: layer)
         let state: UIControl.State = index == self.currentPage ? .selected : .normal
-        if let image = self.images[state] {
+        let key = state.rawValue
+        if let image = self.images[key] {
             layer.strokeColor = nil
             layer.fillColor = nil
             layer.path = nil
             layer.contents = image.cgImage
         } else {
             layer.contents = nil
-            let strokeColor = self.strokeColors[state]
-            let fillColor = self.fillColors[state]
+            let strokeColor = self.strokeColors[key]
+            let fillColor = self.fillColors[key]
             if strokeColor == nil && fillColor == nil {
                 layer.fillColor = (state == .selected ? UIColor.white : UIColor.gray).cgColor
                 layer.strokeColor = nil
@@ -257,12 +218,10 @@ open class TFYSwiftPageControl: UIControl {
                 layer.strokeColor = strokeColor?.cgColor
                 layer.fillColor = fillColor?.cgColor
             }
-            layer.path = self.paths[state]?.cgPath ?? UIBezierPath(ovalIn: CGRect(x: 0, y: 0, width: self.itemSpacing, height: self.itemSpacing)).cgPath
+            layer.path = self.paths[key]?.cgPath
+                ?? UIBezierPath(ovalIn: CGRect(x: 0, y: 0, width: self.itemSpacing, height: self.itemSpacing)).cgPath
         }
-        if let transform = self.transforms[state] {
-            layer.transform = CATransform3DMakeAffineTransform(transform)
-        }
-        layer.opacity = Float(self.alphas[state] ?? 1.0)
+        layer.opacity = Float(self.alphas[key] ?? 1.0)
     }
     
     fileprivate func setNeedsCreateIndicators() {
@@ -273,18 +232,16 @@ open class TFYSwiftPageControl: UIControl {
     }
     
     fileprivate func createIndicatorsIfNecessary() {
-        guard self.needsCreateIndicators else {
-            return
-        }
+        guard self.needsCreateIndicators else { return }
         self.needsCreateIndicators = false
         CATransaction.begin()
         CATransaction.setDisableActions(true)
-        if self.currentPage >= self.numberOfPages {
+        if self.numberOfPages <= 0 {
+            self.currentPage = 0
+        } else if self.currentPage >= self.numberOfPages {
             self.currentPage = self.numberOfPages - 1
         }
-        self.indicatorLayers.forEach { (layer) in
-            layer.removeFromSuperlayer()
-        }
+        self.indicatorLayers.forEach { $0.removeFromSuperlayer() }
         self.indicatorLayers.removeAll()
         for _ in 0..<self.numberOfPages {
             let layer = CAShapeLayer()
@@ -295,12 +252,5 @@ open class TFYSwiftPageControl: UIControl {
         self.setNeedsUpdateIndicators()
         self.updateIndicatorsIfNecessary()
         CATransaction.commit()
-    }
-
-}
-
-extension UIControl.State: @retroactive Hashable {
-    public var hashValue: Int {
-        return Int((6777*self.rawValue+3777)%UInt(UInt16.max))
     }
 }

@@ -25,13 +25,13 @@ open class TFYSwiftPagerViewCell: UICollectionViewCell {
         self.contentView.addSubview(view)
         view.addSubview(textLabel)
         
-        textLabel.addObserver(self, forKeyPath: "font", options: [.old,.new], context: kvoContext)
+        textLabel.addObserver(self, forKeyPath: "font", options: [.old, .new], context: kvoContext)
         
         _textLabel = textLabel
         return textLabel
     }
     
-    /// 返回页导航视图单元格的图像视图。默认是零。
+    /// 返回页导航视图单元格的图像视图。
     @objc
     open var imageView: UIImageView? {
         if let _ = _imageView {
@@ -41,6 +41,13 @@ open class TFYSwiftPagerViewCell: UICollectionViewCell {
         self.contentView.addSubview(imageView)
         _imageView = imageView
         return imageView
+    }
+    
+    /// 是否显示默认阴影。默认 false，降低滚动时的绘制开销。
+    @objc open var isShadowEnabled: Bool = false {
+        didSet {
+            self.applyShadowSettings()
+        }
     }
     
     fileprivate weak var _textLabel: UILabel?
@@ -98,12 +105,21 @@ open class TFYSwiftPagerViewCell: UICollectionViewCell {
     }
     
     fileprivate func commonInit() {
-        self.contentView.backgroundColor = UIColor.clear
-        self.backgroundColor = UIColor.clear
-        self.contentView.layer.shadowColor = UIColor.black.cgColor
-        self.contentView.layer.shadowRadius = 5
-        self.contentView.layer.shadowOpacity = 0.75
-        self.contentView.layer.shadowOffset = .zero
+        self.contentView.backgroundColor = .clear
+        self.backgroundColor = .clear
+        self.applyShadowSettings()
+    }
+    
+    fileprivate func applyShadowSettings() {
+        if self.isShadowEnabled {
+            self.contentView.layer.shadowColor = UIColor.black.cgColor
+            self.contentView.layer.shadowRadius = 5
+            self.contentView.layer.shadowOpacity = 0.35
+            self.contentView.layer.shadowOffset = .zero
+        } else {
+            self.contentView.layer.shadowOpacity = 0
+            self.contentView.layer.shadowRadius = 0
+        }
     }
     
     deinit {
@@ -117,28 +133,23 @@ open class TFYSwiftPagerViewCell: UICollectionViewCell {
         if let imageView = _imageView {
             imageView.frame = self.contentView.bounds
         }
-        if let textLabel = _textLabel {
-            textLabel.superview!.frame = {
-                var rect = self.contentView.bounds
-                let height = textLabel.font.pointSize*1.5
-                rect.size.height = height
-                rect.origin.y = self.contentView.frame.height-height
-                return rect
-            }()
-            textLabel.frame = {
-                var rect = textLabel.superview!.bounds
-                rect = rect.insetBy(dx: 8, dy: 0)
-                rect.size.height -= 1
-                rect.origin.y += 1
-                return rect
-            }()
+        if let textLabel = _textLabel, let container = textLabel.superview {
+            var rect = self.contentView.bounds
+            let height = textLabel.font.pointSize * 1.5
+            rect.size.height = height
+            rect.origin.y = self.contentView.frame.height - height
+            container.frame = rect
+            var labelRect = container.bounds.insetBy(dx: 8, dy: 0)
+            labelRect.size.height -= 1
+            labelRect.origin.y += 1
+            textLabel.frame = labelRect
         }
         if let selectedForegroundView = _selectedForegroundView {
             selectedForegroundView.frame = self.contentView.bounds
         }
     }
 
-    open override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+    open override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey: Any]?, context: UnsafeMutableRawPointer?) {
         if context == kvoContext {
             if keyPath == "font" {
                 self.setNeedsLayout()
