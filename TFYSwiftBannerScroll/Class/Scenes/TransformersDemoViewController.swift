@@ -95,9 +95,3 @@ final class TransformersDemoViewController: DemoPagerBaseViewController {
         setStatus("transformer = \(type.displayName)")
     }
 }
-
-extension PagerViewTransformerType: CaseIterable {
-    public static var allCases: [PagerViewTransformerType] {
-        (0..<21).compactMap { PagerViewTransformerType(rawValue: $0) }
-    }
-}

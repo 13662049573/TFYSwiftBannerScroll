@@ -7,6 +7,7 @@
 
 import UIKit
 
+@MainActor
 @objc
 public protocol TFYSwiftPagerViewDataSource: NSObjectProtocol {
     
@@ -20,6 +21,7 @@ public protocol TFYSwiftPagerViewDataSource: NSObjectProtocol {
     
 }
 
+@MainActor
 @objc
 public protocol TFYSwiftPagerViewDelegate: NSObjectProtocol {
     
@@ -79,7 +81,9 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
     // MARK: - 公共属性
 
     /// 作为页导航视图的数据源的对象。
-    open weak var dataSource: TFYSwiftPagerViewDataSource?
+    open weak var dataSource: TFYSwiftPagerViewDataSource? {
+        didSet { self.reloadData() }
+    }
     
     /// 作为页导航视图的委托的对象。
     open weak var delegate: TFYSwiftPagerViewDelegate?
@@ -119,8 +123,7 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
     /// 布尔值指示页导航视图是否有无限项。默认是 false。
     open var isInfinite: Bool = false {
         didSet {
-            self.collectionViewLayout.needsReprepare = true
-            self.collectionView.reloadData()
+            self.reloadData()
         }
     }
 
@@ -174,7 +177,12 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
     @objc
     open var transformer: TFYSwiftPagerViewTransformer? {
         didSet {
+            if oldValue !== self.transformer { oldValue?.pagerView = nil }
             self.transformer?.pagerView = self
+            if self.transformer?.type == .grid {
+                self.isInfinite = false
+                self.isPagingEnabled = true
+            }
             if let pending = self.pendingGridConfiguration, self.transformer?.type == .grid {
                 self.pendingGridConfiguration = nil
                 self.applyGridConfiguration(rows: pending.rows, columns: pending.columns, spacing: pending.spacing)
@@ -219,7 +227,7 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
         return self.collectionView.isTracking
     }
     
-    /// 内容视图的原点从pagerView视图的原点偏移的位置（以 item 为单位）。
+    /// 滚动偏移（以 item 为单位；网格模式以页为单位），循环模式归一化到数据范围。
     @objc
     open var scrollOffset: CGFloat {
         let spacing = self.collectionViewLayout.itemSpacing
@@ -227,7 +235,10 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
         let contentOffset = self.scrollDirection == .horizontal
             ? self.collectionView.contentOffset.x
             : self.collectionView.contentOffset.y
-        return fmod(contentOffset / spacing, CGFloat(self.numberOfItems))
+        let count = CGFloat(self.transformer?.type == .grid ? self.collectionViewLayout.pageCount : self.numberOfItems)
+        guard count > 0 else { return 0 }
+        let offset = fmod(contentOffset / spacing, count)
+        return offset < 0 ? offset + count : offset
     }
     
     /// 平移手势的底层手势识别器。
@@ -244,6 +255,7 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
     fileprivate weak var collectionView: TFYSwiftPagerCollectionView!
     fileprivate weak var contentView: UIView!
     fileprivate var timer: Timer?
+    fileprivate var isAnimating = false
     fileprivate var isTimerPausedByBackground = false
     fileprivate var pendingGridConfiguration: (rows: Int, columns: Int, spacing: CGFloat)?
     internal var numberOfItems: Int = 0
@@ -302,14 +314,16 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
         self.backgroundView?.frame = self.bounds
         self.contentView.frame = self.bounds
         self.collectionView.frame = self.contentView.bounds
+        self.startTimer()
     }
     
-    open override func willMove(toWindow newWindow: UIWindow?) {
-        super.willMove(toWindow: newWindow)
-        if newWindow != nil {
+    open override func didMoveToWindow() {
+        super.didMoveToWindow()
+        if self.window != nil {
             self.startTimer()
         } else {
             self.cancelTimer()
+            self.isAnimating = false
         }
     }
     
@@ -340,14 +354,14 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
     // MARK: - UICollectionViewDataSource
     
     public func numberOfSections(in collectionView: UICollectionView) -> Int {
-        guard let dataSource = self.dataSource else {
-            return 1
-        }
-        self.numberOfItems = dataSource.numberOfItems(in: self)
+        self.numberOfItems = max(self.dataSource?.numberOfItems(in: self) ?? 0, 0)
         guard self.numberOfItems > 0 else {
-            return 0;
+            self.numberOfSections = 0
+            return 0
         }
-        self.numberOfSections = self.isInfinite && (self.numberOfItems > 1 || !self.removesInfiniteLoopForSingleItem) ? Int(Int16.max)/self.numberOfItems : 1
+        let repeats = self.isInfinite && self.transformer?.type != .grid
+            && (self.numberOfItems > 1 || !self.removesInfiniteLoopForSingleItem)
+        self.numberOfSections = repeats ? max(Int(Int16.max) / self.numberOfItems, 1) : 1
         return self.numberOfSections
     }
     
@@ -368,7 +382,7 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
         guard let function = self.delegate?.pagerView(_:shouldHighlightItemAt:) else {
             return true
         }
-        let index = indexPath.item % self.numberOfItems
+        let index = indexPath.item
         return function(self,index)
     }
     
@@ -376,7 +390,7 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
         guard let function = self.delegate?.pagerView(_:didHighlightItemAt:) else {
             return
         }
-        let index = indexPath.item % self.numberOfItems
+        let index = indexPath.item
         function(self,index)
     }
     
@@ -384,7 +398,7 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
         guard let function = self.delegate?.pagerView(_:shouldSelectItemAt:) else {
             return true
         }
-        let index = indexPath.item % self.numberOfItems
+        let index = indexPath.item
         return function(self,index)
     }
     
@@ -396,7 +410,7 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
         defer {
             self.possibleTargetingIndexPath = nil
         }
-        let index = indexPath.item % self.numberOfItems
+        let index = indexPath.item
         function(self,index)
     }
     
@@ -404,7 +418,7 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
         guard let function = self.delegate?.pagerView(_:willDisplay:forItemAt:) else {
             return
         }
-        let index = indexPath.item % self.numberOfItems
+        let index = indexPath.item
         function(self,cell as! TFYSwiftPagerViewCell,index)
     }
     
@@ -412,22 +426,20 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
         guard let function = self.delegate?.pagerView(_:didEndDisplaying:forItemAt:) else {
             return
         }
-        let index = indexPath.item % self.numberOfItems
+        let index = indexPath.item
         function(self,cell as! TFYSwiftPagerViewCell,index)
     }
     
     public func scrollViewDidScroll(_ scrollView: UIScrollView) {
         if !self.isPossiblyRotating && self.numberOfItems > 0 {
-            let currentIndex = lround(Double(self.scrollOffset)) % self.numberOfItems
-            if currentIndex != self.currentIndex {
-                self.currentIndex = currentIndex
-                self.delegate?.pagerView?(self, didChangeIndex: currentIndex)
-            }
+            let offset = self.scrollDirection == .horizontal ? scrollView.contentOffset.x : scrollView.contentOffset.y
+            self.updateCurrentIndex(self.collectionViewLayout.itemIndex(forOffset: offset))
         }
         self.delegate?.pagerViewDidScroll?(self)
     }
     
     public func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        self.isAnimating = false
         if let function = self.delegate?.pagerViewWillBeginDragging(_:) {
             function(self)
         }
@@ -444,22 +456,29 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
                 let contentOffset = self.scrollDirection == .horizontal
                     ? targetContentOffset.pointee.x
                     : targetContentOffset.pointee.y
-                let targetItem = lround(Double(contentOffset / spacing))
-                function(self, ((targetItem % self.numberOfItems) + self.numberOfItems) % self.numberOfItems)
+                function(self, self.collectionViewLayout.itemIndex(forOffset: contentOffset))
             }
         }
-        if self.automaticSlidingInterval > 0 {
+    }
+
+    public func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        if !decelerate {
+            self.recenterIfNeeded()
             self.startTimer()
         }
     }
     
     public func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        self.recenterIfNeeded()
+        self.startTimer()
         if let function = self.delegate?.pagerViewDidEndDecelerating {
             function(self)
         }
     }
     
     public func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
+        self.isAnimating = false
+        self.recenterIfNeeded()
         if let function = self.delegate?.pagerViewDidEndScrollAnimation {
             function(self)
         }
@@ -506,8 +525,13 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
     /// 重新加载集合视图的所有数据。
     @objc(reloadData)
     open func reloadData() {
-        self.collectionViewLayout.needsReprepare = true;
+        self.isAnimating = false
+        _ = self.numberOfSections(in: self.collectionView)
+        self.updateCurrentIndex(min(self.currentIndex, max(self.numberOfItems - 1, 0)))
+        self.collectionViewLayout.forceInvalidate()
         self.collectionView.reloadData()
+        self.cancelTimer()
+        self.startTimer()
     }
     
     /// 选择指定索引处的项目，并可选择将其滚动到视图中。
@@ -517,9 +541,11 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
     ///   - animated: 指定true以使选择中的更改具有动画效果，指定false以使更改不具有动画效果。
     @objc(selectItemAtIndex:animated:)
     open func selectItem(at index: Int, animated: Bool) {
+        guard (0..<self.numberOfItems).contains(index) else { return }
+        self.collectionView.layoutIfNeeded()
         let indexPath = self.nearbyIndexPath(for: index)
-        let scrollPosition: UICollectionView.ScrollPosition = self.scrollDirection == .horizontal ? .centeredHorizontally : .centeredVertically
-        self.collectionView.selectItem(at: indexPath, animated: animated, scrollPosition: scrollPosition)
+        self.collectionView.selectItem(at: indexPath, animated: false, scrollPosition: [])
+        self.scrollToItem(at: index, animated: animated)
     }
     
     /// 取消选择指定索引处的项。
@@ -529,6 +555,7 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
     ///   - animated: 指定true以使选择中的更改具有动画效果，指定false以使更改不具有动画效果。
     @objc(deselectItemAtIndex:animated:)
     open func deselectItem(at index: Int, animated: Bool) {
+        guard (0..<self.numberOfItems).contains(index) else { return }
         let indexPath = self.nearbyIndexPath(for: index)
         self.collectionView.deselectItem(at: indexPath, animated: animated)
     }
@@ -540,9 +567,9 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
     ///   - animated: 指定true为动画滚动行为，指定false为立即调整页导航视图的可见内容。
     @objc(scrollToItemAtIndex:animated:)
     open func scrollToItem(at index: Int, animated: Bool) {
-        guard index < self.numberOfItems else {
-            fatalError("index \(index) is out of range [0...\(self.numberOfItems-1)]")
-        }
+        guard (0..<self.numberOfItems).contains(index) else { return }
+        self.layoutIfNeeded()
+        self.collectionView.layoutIfNeeded()
         let indexPath = { () -> IndexPath in
             if let indexPath = self.possibleTargetingIndexPath, indexPath.item == index {
                 defer {
@@ -553,7 +580,12 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
             return self.numberOfSections > 1 ? self.nearbyIndexPath(for: index) : IndexPath(item: index, section: 0)
         }()
         let contentOffset = self.collectionViewLayout.contentOffset(for: indexPath)
+        self.isAnimating = animated && self.collectionView.contentOffset != contentOffset
         self.collectionView.setContentOffset(contentOffset, animated: animated)
+        if !animated {
+            self.updateCurrentIndex(self.collectionViewLayout.itemIndex(forOffset:
+                self.scrollDirection == .horizontal ? contentOffset.x : contentOffset.y))
+        }
     }
     
     /// 返回指定单元格的索引。
@@ -574,6 +606,8 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
     /// - Returns: 对应位置的单元格对象，如果单元格不可见或索引超出范围，则为nil。
     @objc(cellForItemAtIndex:)
     open func cellForItem(at index: Int) -> TFYSwiftPagerViewCell? {
+        guard (0..<self.numberOfItems).contains(index) else { return nil }
+        self.collectionView.layoutIfNeeded()
         let indexPath = self.nearbyIndexPath(for: index)
         return self.collectionView.cellForItem(at: indexPath) as? TFYSwiftPagerViewCell
     }
@@ -604,13 +638,16 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(self.handleWillEnterForeground),
-            name: UIApplication.willEnterForegroundNotification,
+            name: UIApplication.didBecomeActiveNotification,
             object: nil
         )
     }
     
     fileprivate func startTimer() {
-        guard self.automaticSlidingInterval > 0, self.timer == nil, !self.isTimerPausedByBackground else {
+        guard self.automaticSlidingInterval.isFinite, self.automaticSlidingInterval > 0,
+              self.timer == nil, self.window != nil, self.numberOfItems > 1,
+              !self.isTimerPausedByBackground, UIApplication.shared.applicationState != .background,
+              !self.collectionView.isDragging, !self.collectionView.isDecelerating else {
             return
         }
         let timer = Timer(timeInterval: TimeInterval(self.automaticSlidingInterval), repeats: true) { [weak self] _ in
@@ -621,7 +658,17 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
     }
     
     fileprivate func flipNext() {
-        guard self.superview != nil, self.window != nil, self.numberOfItems > 0, !self.isTracking else {
+        guard self.window != nil, self.numberOfItems > 1,
+              !self.isTracking, !self.isAnimating, !self.collectionView.isDragging, !self.collectionView.isDecelerating else {
+            return
+        }
+        self.collectionView.layoutIfNeeded()
+        self.recenterIfNeeded()
+        if self.transformer?.type == .grid {
+            let pages = self.collectionViewLayout.pageCount
+            guard pages > 1 else { return }
+            let nextPage = (self.currentIndex / self.collectionViewLayout.itemsPerPage + 1) % pages
+            self.scrollToItem(at: nextPage * self.collectionViewLayout.itemsPerPage, animated: true)
             return
         }
         let indexPath = self.centermostIndexPath
@@ -630,6 +677,7 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
             : 0
         let item = (indexPath.item + 1) % self.numberOfItems
         let contentOffset = self.collectionViewLayout.contentOffset(for: IndexPath(item: item, section: section))
+        self.isAnimating = self.collectionView.contentOffset != contentOffset
         self.collectionView.setContentOffset(contentOffset, animated: true)
     }
     
@@ -640,10 +688,8 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
     
     @objc
     fileprivate func handleDidEnterBackground() {
-        if self.timer != nil {
-            self.isTimerPausedByBackground = true
-            self.cancelTimer()
-        }
+        self.isTimerPausedByBackground = true
+        self.cancelTimer()
     }
     
     @objc
@@ -654,16 +700,32 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
     }
     
     fileprivate func nearbyIndexPath(for index: Int) -> IndexPath {
-        // 有更好的算法吗?
-        let currentIndex = self.currentIndex
+        guard self.numberOfSections > 1 else { return IndexPath(item: index, section: 0) }
         let currentSection = self.centermostIndexPath.section
-        if abs(currentIndex-index) <= self.numberOfItems/2 {
-            return IndexPath(item: index, section: currentSection)
-        } else if (index-currentIndex >= 0) {
-            return IndexPath(item: index, section: currentSection-1)
-        } else {
-            return IndexPath(item: index, section: currentSection+1)
+        var section = currentSection
+        if abs(self.currentIndex - index) > self.numberOfItems / 2 {
+            section += index > self.currentIndex ? -1 : 1
         }
+        return IndexPath(item: index, section: min(max(section, 0), self.numberOfSections - 1))
+    }
+
+    internal func invalidateTransformerLayout() {
+        self.collectionViewLayout.forceInvalidate()
+    }
+
+    fileprivate func updateCurrentIndex(_ index: Int) {
+        guard self.currentIndex != index else { return }
+        self.currentIndex = index
+        self.delegate?.pagerView?(self, didChangeIndex: index)
+    }
+
+    fileprivate func recenterIfNeeded() {
+        guard self.numberOfSections > 1, self.numberOfItems > 0 else { return }
+        self.collectionView.layoutIfNeeded()
+        let indexPath = self.centermostIndexPath
+        guard indexPath.section <= 1 || indexPath.section >= self.numberOfSections - 2 else { return }
+        let centered = IndexPath(item: indexPath.item, section: self.numberOfSections / 2)
+        self.collectionView.setContentOffset(self.collectionViewLayout.contentOffset(for: centered), animated: false)
     }
 
     /// 配置网格布局。若当前 transformer 不是 `.grid`，参数会缓存，待设为 `.grid` 后自动应用。

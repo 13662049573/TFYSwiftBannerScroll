@@ -8,7 +8,7 @@
 import UIKit
 
 @objc
-public enum PagerViewTransformerType: Int {
+public enum PagerViewTransformerType: Int, CaseIterable {
     case crossFading       // 渐变淡出效果
     case zoomOut           // 缩小淡出效果
     case depth             // 立体深度效果
@@ -73,8 +73,18 @@ open class TFYSwiftPagerViewTransformer: NSObject {
     open internal(set) weak var pagerView: TFYSwiftPagerView?
     open internal(set) var type: PagerViewTransformerType
     
-    @objc open var minimumScale: CGFloat = 0.65
-    @objc open var minimumAlpha: CGFloat = 0.6
+    @objc open var minimumScale: CGFloat = 0.65 {
+        didSet {
+            self.minimumScale = self.minimumScale.isFinite ? min(max(self.minimumScale, 0), 1) : 0.65
+            self.pagerView?.invalidateTransformerLayout()
+        }
+    }
+    @objc open var minimumAlpha: CGFloat = 0.6 {
+        didSet {
+            self.minimumAlpha = self.minimumAlpha.isFinite ? min(max(self.minimumAlpha, 0), 1) : 0.6
+            self.pagerView?.invalidateTransformerLayout()
+        }
+    }
     @objc open var perspective: CGFloat = -0.002  // 3D透视参数
     @objc open var springDamping: CGFloat = 0.8   // 弹性动画阻尼系数
     @objc open var parallaxFactor: CGFloat = 0.5  // 视差强度系数
@@ -87,9 +97,24 @@ open class TFYSwiftPagerViewTransformer: NSObject {
     @objc open var accordionFactor: CGFloat = 0.8  // 手风琴折叠系数
     @objc open var carouselRadius: CGFloat = 300.0 // 旋转木马半径
     @objc open var stackOffset: CGFloat = 8.0      // 堆叠偏移量
-    @objc open var gridRows: Int = 2     // 网格行数
-    @objc open var gridColumns: Int = 3   // 网格列数
-    @objc open var gridSpacing: CGFloat = 10.0  // 网格间距
+    @objc open var gridRows: Int = 2 {
+        didSet {
+            self.gridRows = max(self.gridRows, 1)
+            self.pagerView?.invalidateTransformerLayout()
+        }
+    }
+    @objc open var gridColumns: Int = 3 {
+        didSet {
+            self.gridColumns = max(self.gridColumns, 1)
+            self.pagerView?.invalidateTransformerLayout()
+        }
+    }
+    @objc open var gridSpacing: CGFloat = 10.0 {
+        didSet {
+            self.gridSpacing = self.gridSpacing.isFinite ? max(self.gridSpacing, 0) : 0
+            self.pagerView?.invalidateTransformerLayout()
+        }
+    }
     
     @objc
     public init(type: PagerViewTransformerType) {
@@ -158,7 +183,8 @@ open class TFYSwiftPagerViewTransformer: NSObject {
                     transform.ty = position < 0 ? (vertMargin - horzMargin*2) : (-vertMargin + horzMargin*2)
                 }
                 // 相对于页面大小淡出页面。
-                alpha = self.minimumAlpha + (scaleFactor-self.minimumScale)/(1-self.minimumScale)*(1-self.minimumAlpha)
+                alpha = self.minimumScale == 1 ? 1
+                    : self.minimumAlpha + (scaleFactor-self.minimumScale)/(1-self.minimumScale)*(1-self.minimumAlpha)
             case 1 ... CGFloat.greatestFiniteMagnitude :  // (1,+Infinity]
                 // 这一页离屏幕太远了。
                 alpha = 0
@@ -482,75 +508,79 @@ open class TFYSwiftPagerViewTransformer: NSObject {
             return 0
         }
         let scrollDirection = pagerView.scrollDirection
+        let size = pagerView.itemSize == .zero
+            ? CGSize(width: max(pagerView.bounds.width - pagerView.contentInsets.left - pagerView.contentInsets.right, 0),
+                     height: max(pagerView.bounds.height - pagerView.contentInsets.top - pagerView.contentInsets.bottom, 0))
+            : pagerView.itemSize
         switch self.type {
         case .overlap:
             guard scrollDirection == .horizontal else {
                 return 0
             }
-            return pagerView.itemSize.width * -self.minimumScale * 0.6
+            return size.width * -self.minimumScale * 0.6
         case .linear:
             guard scrollDirection == .horizontal else {
                 return 0
             }
-            return pagerView.itemSize.width * -self.minimumScale * 0.2
+            return size.width * -self.minimumScale * 0.2
         case .coverFlow:
             guard scrollDirection == .horizontal else {
                 return 0
             }
-            return -pagerView.itemSize.width * sin(.pi*0.25*0.25*3.0)
+            return -size.width * sin(.pi*0.25*0.25*3.0)
         case .ferrisWheel,.invertedFerrisWheel:
             guard scrollDirection == .horizontal else {
                 return 0
             }
-            return -pagerView.itemSize.width * 0.15
+            return -size.width * 0.15
         case .cubic:
             return 0
         case .rotate3D:
             return scrollDirection == .horizontal ?
-                -pagerView.itemSize.width * 0.2 :
-                -pagerView.itemSize.height * 0.2
+                -size.width * 0.2 :
+                -size.height * 0.2
         case .parallax:
             return scrollDirection == .horizontal ?
-                pagerView.itemSize.width * 0.1 :
-                pagerView.itemSize.height * 0.1
+                size.width * 0.1 :
+                size.height * 0.1
         case .springy:
             return scrollDirection == .horizontal ?
-                pagerView.itemSize.width * 0.3 :
-                pagerView.itemSize.height * 0.3
+                size.width * 0.3 :
+                size.height * 0.3
         case .flip:
             return scrollDirection == .horizontal ?
-                -pagerView.itemSize.width * 0.3 :
-                -pagerView.itemSize.height * 0.3
+                -size.width * 0.3 :
+                -size.height * 0.3
         case .cards:
             return cardSpacing
         case .cylinder:
             return scrollDirection == .horizontal ?
-                -pagerView.itemSize.width * 0.2 :
-                -pagerView.itemSize.height * 0.2
+                -size.width * 0.2 :
+                -size.height * 0.2
         case .wave:
             return scrollDirection == .horizontal ?
-                pagerView.itemSize.width * 0.1 :
-                pagerView.itemSize.height * 0.1
+                size.width * 0.1 :
+                size.height * 0.1
         case .windmill:
             return scrollDirection == .horizontal ?
-                pagerView.itemSize.width * 0.15 :
-                pagerView.itemSize.height * 0.15
+                size.width * 0.15 :
+                size.height * 0.15
         case .accordion:
             return scrollDirection == .horizontal ?
-                -pagerView.itemSize.width * 0.5 :
-                -pagerView.itemSize.height * 0.5
+                -size.width * 0.5 :
+                -size.height * 0.5
         case .carousel:
             return scrollDirection == .horizontal ?
-                pagerView.itemSize.width * 0.2 :
-                pagerView.itemSize.height * 0.2
+                size.width * 0.2 :
+                size.height * 0.2
         case .stack:
             return scrollDirection == .horizontal ?
-                -pagerView.itemSize.width * 0.8 :
-                -pagerView.itemSize.height * 0.8
+                -size.width * 0.8 :
+                -size.height * 0.8
         case .grid:
             return scrollDirection == .horizontal ?
-                (pagerView.itemSize.width + gridSpacing) / CGFloat(gridColumns) :
-                (pagerView.itemSize.height + gridSpacing) / CGFloat(gridRows)
+                (size.width + gridSpacing) / CGFloat(gridColumns) :
+                (size.height + gridSpacing) / CGFloat(gridRows)
         default:
             break
         }
