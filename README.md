@@ -1,258 +1,216 @@
-# TFYSwiftBannerScroll
+# TFYSwiftBannerScrollKit
 
-<p align="center">
-    <img src="banner.png" alt="TFYSwiftBannerScroll" title="TFYSwiftBannerScroll" width="557"/>
-</p>
+原生 UIKit 轮播组件：水平 / 垂直、有限 / 无限轮播、自动翻页、21 种转场、自定义 Cell、网格分页和页面指示器。无第三方依赖。
 
-<p align="center">
-    <a href="https://developer.apple.com/swift"><img src="https://img.shields.io/badge/language-Swift%205.0+-f48041.svg?style=flat"></a>
-    <a href="https://developer.apple.com/ios"><img src="https://img.shields.io/badge/platform-iOS%2015.0+-blue.svg?style=flat"></a>
-    <a href="https://github.com/13662049573/TFYSwiftBannerScroll/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
-    <a href="https://cocoapods.org/pods/TFYSwiftBannerScrollKit"><img src="https://img.shields.io/cocoapods/v/TFYSwiftBannerScrollKit.svg?style=flat"></a>
-    <a href="https://github.com/13662049573/TFYSwiftBannerScroll"><img src="https://img.shields.io/github/stars/13662049573/TFYSwiftBannerScroll.svg?style=social&label=Star"></a>
-</p>
-
-## 简介
-
-TFYSwiftBannerScroll 是一个高度可定制的 iOS 轮播组件（`TFYSwiftBannerScrollKit`）。支持水平/垂直滚动、无限循环、自动轮播、自定义 Cell 与页面指示器，并内置 21 种转场动画（含网格布局）。
-
-## 预览
-
-<p align="center">
-<img src="preview1.gif" width="210"/>
-<img src="preview2.gif" width="210"/>
-<img src="preview3.gif" width="210"/>
-</p>
-
-## 特性
-
-- [x] 水平 / 垂直滚动（部分动画仅水平，见 `supportsVertical`）
-- [x] 无限循环与自动轮播（进后台自动暂停，回前台恢复）
-- [x] 21 种转场动画（crossFading / zoomOut / depth / overlap / linear / coverFlow / ferrisWheel / invertedFerrisWheel / cubic / rotate3D / parallax / springy / flip / cards / cylinder / wave / windmill / accordion / carousel / stack / grid）
-- [x] 自定义页面指示器（颜色 / 图片 / 路径 / alpha / 对齐）
-- [x] 自定义 Cell（继承 `TFYSwiftPagerViewCell`）
-- [x] 公开布局控制：`itemSize`、`interitemSpacing`、`contentInsets`、`isPagingEnabled`
-- [x] 索引变化回调：`pagerView(_:didChangeIndex:)`（同时支持 KVO `currentIndex`）
-- [x] 完整 Demo：功能菜单 + 10 个场景覆盖全部公开 API
-
-## 系统要求
-
-- iOS 15.0+
-- Swift 5.0+
-- Xcode 14.0+
+- 最低 **iOS 16.0**
+- Swift 5.7+ / Xcode 14+，使用 Swift 5 语言模式
+- Swift Package Manager、CocoaPods、源码集成
+- 当前版本 **3.0.0**（最低系统版本调整，升级前请检查宿主部署版本）
 
 ## 安装
 
-### CocoaPods
-
-```ruby
-pod 'TFYSwiftBannerScrollKit', '~> 2.1.0'
-```
-
 ### Swift Package Manager
 
-```swift
-dependencies: [
-    .package(url: "https://github.com/13662049573/TFYSwiftBannerScroll.git", .upToNextMajor(from: "2.1.0"))
-]
+清单配置遵循 [Swift PackageDescription 官方文档](https://docs.swift.org/package-manager/PackageDescription/PackageDescription.html)。
+
+Xcode → File → Add Package Dependencies，填入仓库地址：
+
+```text
+https://github.com/13662049573/TFYSwiftBannerScroll.git
 ```
 
-### 手动安装
+发布 `3.0.0` tag 后，选择 **Up to Next Major Version / 3.0.0**，添加产品 **TFYSwiftBannerScrollKit**。
+当前工作区可直接通过 **Add Local** 选择仓库目录验证；仅修改本地版本号不会自动发布远程版本。
 
-将 `TFYSwiftBannerScroll/TFYSwiftBannerScrollKit` 文件夹拖入工程即可。
+其他 Package 的清单示例：
+
+```swift
+// swift-tools-version:5.7
+import PackageDescription
+
+let package = Package(
+    name: "MyAppFeature",
+    platforms: [.iOS(.v16)],
+    dependencies: [
+        .package(url: "https://github.com/13662049573/TFYSwiftBannerScroll.git", from: "3.0.0")
+    ],
+    targets: [
+        .target(name: "MyAppFeature", dependencies: [
+            .product(name: "TFYSwiftBannerScrollKit", package: "TFYSwiftBannerScroll")
+        ])
+    ]
+)
+```
+
+### CocoaPods
+
+对应版本发布到 CocoaPods 后：
+
+```ruby
+platform :ios, '16.0'
+pod 'TFYSwiftBannerScrollKit', '~> 3.0'
+```
+
+### 手动集成
+
+将 `TFYSwiftBannerScroll/TFYSwiftBannerScrollKit` 下的 7 个 Swift 文件加入目标。不要同时加入源码和 Package / Pod，否则会产生重复类型。
 
 ## 快速开始
 
 ```swift
 import UIKit
-// 手动集成时无需 import；CocoaPods 模块名为 TFYSwiftBannerScrollKit
+import TFYSwiftBannerScrollKit // 手动将源码加入同一个目标时省略
 
-class ViewController: UIViewController, TFYSwiftPagerViewDataSource, TFYSwiftPagerViewDelegate {
-
-    let pagerView = TFYSwiftPagerView()
-    let pageControl = TFYSwiftPageControl()
-    let items: [UIImage] = [] // 你的数据
+final class BannerController: UIViewController, TFYSwiftPagerViewDataSource, TFYSwiftPagerViewDelegate {
+    private let pager = TFYSwiftPagerView()
+    private let indicator = TFYSwiftPageControl()
+    private var images: [UIImage] = []
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        pagerView.dataSource = self
-        pagerView.delegate = self
-        pagerView.register(TFYSwiftPagerViewCell.self, forCellWithReuseIdentifier: "cell")
-        pagerView.isInfinite = true
-        pagerView.automaticSlidingInterval = 3.0
-        pagerView.transformer = TFYSwiftPagerViewTransformer(type: .coverFlow)
-
-        pageControl.numberOfPages = items.count
-        pageControl.setFillColor(.lightGray, for: .normal)
-        pageControl.setFillColor(.white, for: .selected)
+        pager.translatesAutoresizingMaskIntoConstraints = false
+        indicator.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(pager)
+        view.addSubview(indicator)
+        NSLayoutConstraint.activate([
+            pager.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            pager.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            pager.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            pager.heightAnchor.constraint(equalToConstant: 220),
+            indicator.topAnchor.constraint(equalTo: pager.bottomAnchor, constant: 8),
+            indicator.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            indicator.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            indicator.heightAnchor.constraint(equalToConstant: 28)
+        ])
+        pager.register(TFYSwiftPagerViewCell.self, forCellWithReuseIdentifier: "banner")
+        pager.dataSource = self
+        pager.delegate = self
+        pager.isInfinite = true
+        pager.automaticSlidingInterval = 3
+        indicator.setFillColor(.systemGray3, for: .normal)
+        indicator.setFillColor(.systemIndigo, for: .selected)
     }
 
-    func numberOfItems(in pagerView: TFYSwiftPagerView) -> Int {
-        items.count
+    func update(images: [UIImage]) {
+        loadViewIfNeeded()
+        self.images = images
+        indicator.numberOfPages = images.count
+        pager.reloadData()
     }
+
+    func numberOfItems(in pagerView: TFYSwiftPagerView) -> Int { images.count }
 
     func pagerView(_ pagerView: TFYSwiftPagerView, cellForItemAt index: Int) -> TFYSwiftPagerViewCell {
-        let cell = pagerView.dequeueReusableCell(withReuseIdentifier: "cell", at: index)
-        cell.imageView?.image = items[index]
+        let cell = pagerView.dequeueReusableCell(withReuseIdentifier: "banner", at: index)
+        cell.imageView?.image = images[index]
         cell.imageView?.contentMode = .scaleAspectFill
-        cell.textLabel?.text = "Item \(index)"
+        cell.imageView?.clipsToBounds = true
         return cell
     }
 
     func pagerView(_ pagerView: TFYSwiftPagerView, didChangeIndex index: Int) {
-        pageControl.currentPage = index
-    }
-
-    func pagerView(_ pagerView: TFYSwiftPagerView, didSelectItemAt index: Int) {
-        pagerView.deselectItem(at: index, animated: true)
-        pagerView.scrollToItem(at: index, animated: true)
+        indicator.currentPage = index
     }
 }
 ```
 
-## API 要点
+所有视图及数据源 / 代理操作在主线程执行。数据源和代理为弱引用，宿主负责持有；数据变化后调用 `reloadData()`。
 
-### 常用属性
+## 交互 Demo
 
-| 属性 | 说明 |
+打开 `TFYSwiftBannerScroll.xcodeproj`，运行共享 Scheme `TFYSwiftBannerScroll`。
+
+菜单按功能分组，支持搜索；每个场景顶部保留实时预览，下方独立滚动参数面板。滑块显示实际数值，支持深色外观和动态字体。卡片尺寸根据预览容器计算，适应 iPhone、iPad 和旋转。
+
+| 场景 | 可操作内容 |
 | --- | --- |
-| `scrollDirection` | `.horizontal` / `.vertical` |
-| `isInfinite` | 无限循环 |
-| `automaticSlidingInterval` | 自动轮播间隔，`0` 关闭 |
-| `itemSize` | 卡片尺寸；`TFYSwiftPagerView.automaticSize` 铺满 |
-| `interitemSpacing` | 卡片间距 |
-| `contentInsets` | 内容边距（由 Layout 消费，用于露出相邻卡片） |
-| `isPagingEnabled` | 整页分页 |
-| `decelerationDistance` | 减速距离；`automaticDistance` 自动计算 |
-| `transformer` | 转场动画 |
-| `currentIndex` / `scrollOffset` | 当前索引 / 滚动偏移 |
+| 基础轮播 | 自动 / 自定尺寸、宽高比例、间距、动画跳转、空 / 单 / 多项重载 |
+| 无限循环与自动轮播 | 无限开关、单项循环移除、间隔、暂停恢复、离窗重挂载 |
+| 滚动物理 | 双向滚动、分页、滚动和手势开关、双向回弹、减速距离、手势状态 |
+| 外观与编程控制 | 四边边距、背景、选择取消、定位、Cell / 索引查询、KVO |
+| 转场动画实验室 | 无转场、全部 21 种内置样式、自定义扩展、全部 17 个可调参数、布局属性检查 |
+| 垂直滚动 | 支持垂直的全部类型、自动翻页、垂直回弹、间距 |
+| 网格分页 | 行列间距、双向分页、按项定位、自动按页轮播、进出网格、空数据 |
+| 页面指示器 | 双状态颜色 / 描边 / 透明度、路径 / 图片、所有对齐方式、边距、单页隐藏 |
+| Cell 与注册方式 | 默认类、自定义类 + CTA、真实 Xib 注册、图片模式、文字、阴影、选中高亮 |
+| 数据源与代理事件 | 2 个数据源与全部 12 个代理回调、选择高亮拦截、节流日志 |
 
-### 转场动画
+<p>
+<img src="docs/images/demo-menu.png" width="260" alt="分组菜单与搜索" />
+<img src="docs/images/demo-transformers.png" width="260" alt="转场预览与参数面板" />
+</p>
+
+逐项接口映射见 [公共 API 展示清单](docs/DEMO_API_COVERAGE.md)。
+
+## 使用边界
+
+| 能力 | 约定 |
+| --- | --- |
+| `itemSize = .zero` / `automaticSize` | 默认铺满可见区域，扣除 `contentInsets` |
+| `contentInsets` | 四边留白；手动卡片尺寸下边缘至少保留指定间距，非对称时首尾不保证几何居中 |
+| `isPagingEnabled` | 按视口分页；卡片尺寸小于视口时，通常用默认卡片吸附 |
+| `decelerationDistance` | `1` 为一项，`automaticDistance` 为按速度自动计算；网格以页计 |
+| `scrollOffset` | 普通模式以 item 计；网格以页计；有限模式限制到有效范围，无限模式归一化 |
+| `currentIndex` / `didChangeIndex` / KVO | 普通模式代表数据索引；网格代表当前页第一项 |
+| `scrollToItem` / `selectItem` | 网格定位到包含目标 item 的整页；空数据或越界请求忽略 |
+| `cellForItem` | 仅返回当前可见的 Cell；不可见或越界返回 `nil` |
+| `index(for:)` | 返回数据索引；Cell 不属于当前 Pager 时返回 `NSNotFound` |
+| `automaticSlidingInterval` | `0` 关闭；离窗、后台、拖动和减速时暂停；空 / 单项不自动翻页 |
+| 网格模式 | 有限分页，配置时关闭无限并开启视口分页；退出时自行设置后续循环 / 分页行为 |
+| `TFYSwiftPageControl` | 展示型控件，默认不接收点击；宿主同步索引，负页数和越界索引会被限制 |
+
+### 转场与自定义扩展
+
+`PagerViewTransformerType.allCases` 列举全部 21 种类型；`displayName` 提供名称，`supportsVertical` 指示方向兼容性。
+仅水平：`overlap`、`linear`、`coverFlow`、`ferrisWheel`、`invertedFerrisWheel`。
 
 ```swift
 let transformer = TFYSwiftPagerViewTransformer(type: .zoomOut)
 transformer.minimumScale = 0.8
 transformer.minimumAlpha = 0.5
-pagerView.transformer = transformer
-
-// 仅使用支持垂直滚动的类型
-if type.supportsVertical {
-    pagerView.scrollDirection = .vertical
-    pagerView.transformer = TFYSwiftPagerViewTransformer(type: type)
-}
+pager.transformer = transformer
 ```
 
-仅水平支持：`overlap`、`linear`、`coverFlow`、`ferrisWheel`、`invertedFerrisWheel`。
+继承 `TFYSwiftPagerViewTransformer`，覆盖 `applyTransform(to:)` 与 `proposedInteritemSpacing()` 可实现自定义样式。参考 Demo 的 `DemoTiltTransformer`。
+修改自定义转场参数后可调用 `reloadData()` 刷新；`minimumScale`、`minimumAlpha` 和网格参数会自行使布局失效。
 
-### 网格布局
-
-```swift
-pagerView.transformer = TFYSwiftPagerViewTransformer(type: .grid)
-pagerView.configureGridLayout(rows: 2, columns: 3, spacing: 10)
-// 也可先 configure 再设置 transformer，参数会缓存后自动应用
-```
-
-### 页面指示器
+### 网格
 
 ```swift
-pageControl.numberOfPages = 5
-pageControl.contentHorizontalAlignment = .center
-pageControl.setStrokeColor(.white, for: .normal)
-pageControl.setFillColor(.white, for: .selected)
-pageControl.setImage(UIImage(named: "dot"), for: .normal)
-pageControl.setAlpha(0.4, for: .normal)
-pageControl.setPath(customPath, for: .selected)
-pageControl.hidesForSinglePage = true
+pager.configureGridLayout(rows: 2, columns: 3, spacing: 10)
+pager.transformer = TFYSwiftPagerViewTransformer(type: .grid)
+// 上述顺序与先设置 transformer 均可。
+// 指示器：页数 = ceil(itemCount / 6)，currentPage = currentIndex / 6。
 ```
 
 ### 自定义 Cell
 
-```swift
-final class BannerCell: TFYSwiftPagerViewCell {
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        isShadowEnabled = true // 默认关闭阴影，按需开启
-        // 在 contentView 上添加自定义子视图
-    }
+继承 `TFYSwiftPagerViewCell`，将内容加入 `contentView`。可使用类或 `UINib` 注册。
+默认 `imageView`、`textLabel` 按需创建；`isShadowEnabled` 默认为 `false`。宿主负责网络图片加载与取消请求，重用时清除宿主创建的异步状态。
 
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-    }
-}
+## 优点与限制
 
-pagerView.register(BannerCell.self, forCellWithReuseIdentifier: "banner")
-```
+优点：无依赖、UIKit 原生、可复用 Cell、按可见区域计算布局、弱引用代理与计时器回调、21 种样式及公开扩展点；Package 与 Pod 使用同一份核心源码。
 
-### 代理
+限制：只发布 iOS UIKit 产品；SwiftUI 需要宿主包装 `UIViewRepresentable`。不包含图片下载 / 缓存、SwiftUI 原生接口或点击式页面指示器。部分转场仅水平；网格不提供无限循环。复杂 3D 动画仍需在目标真机评估视觉与性能。
 
-```swift
-func pagerView(_ pagerView: TFYSwiftPagerView, didChangeIndex index: Int)
-func pagerView(_ pagerView: TFYSwiftPagerView, didSelectItemAt index: Int)
-func pagerViewWillBeginDragging(_ pagerView: TFYSwiftPagerView)
-func pagerViewWillEndDragging(_ pagerView: TFYSwiftPagerView, targetIndex: Int)
-func pagerViewDidScroll(_ pagerView: TFYSwiftPagerView)
-func pagerViewDidEndScrollAnimation(_ pagerView: TFYSwiftPagerView)
-func pagerViewDidEndDecelerating(_ pagerView: TFYSwiftPagerView)
-```
+## 3.0.0 更新
 
-## 示例项目
+- 正式加入 `Package.swift`，产品 / 模块名 `TFYSwiftBannerScrollKit`，包含独立测试目标。
+- Package、Pod、Demo 和测试部署版本统一为 iOS 16；补充共享 Scheme。
+- 修复空数据、数据缩减、负索引回弹、有限跳转、超大数据源和弱数据源释放的边界。
+- 统一网格可见布局、单项布局、按项定位、索引回调与自动轮播的分页计算。
+- 修复吸附边界、无限轮播重复区边界、短间隔动画重启及计时器生命周期问题。
+- 修复指示器奇偶数量居中、负页数和刷新时序；按数量增减复用图层，状态更新由平方降为线性复杂度。
+- 修复 Cell 图片文字创建顺序，支持动态字体并缓存阴影路径；修复 `minimumScale = 1` 的透明度计算。
+- Demo 全面补齐公共 API 展示，增加分组搜索、固定预览、全部参数调节、Nib、自定义转场、数据边界和回调日志。
 
-仓库内置 Demo（功能菜单 + 10 个场景），直接打开工程运行即可：
+历史：2.1.0 加入 contentInsets / isPagingEnabled / didChangeIndex 与基础网格修复；2.0.6 修复自动滚动与分页；2.0.5 为初始版本。
 
-```bash
-git clone https://github.com/13662049573/TFYSwiftBannerScroll.git
-cd TFYSwiftBannerScroll
-open TFYSwiftBannerScroll.xcodeproj
-```
+## 验证与发布
 
-Demo 场景：
+检查范围、已知限制、发布步骤见 [维护记录](docs/MAINTENANCE.md)。真机与 iOS 16 运行结果尚需实际环境验证；在较新模拟器通过不代表 iOS 16 真机验收。
 
-1. 基础轮播  
-2. 无限循环 + 自动轮播  
-3. 滚动物理  
-4. 转场动画画廊  
-5. 垂直滚动  
-6. 网格布局  
-7. 页面指示器  
-8. 自定义 Cell  
-9. 代理事件  
-10. 外观与控制  
+## 作者与许可
 
-## 更新日志
-
-### 2.1.0
-
-- 修复：无 `transformer` 时布局为空
-- 修复：垂直滚动减速仍读取 `velocity.x` 的问题
-- 修复：`itemSpacing == 0` 时的除零风险；Grid 布局更稳健
-- 修复：`configureGridLayout` 需先设置 `.grid` 的调用顺序问题（支持参数缓存）
-- 新增：`contentInsets`、`isPagingEnabled`
-- 新增：`pagerView(_:didChangeIndex:)`
-- 新增：前后台自动暂停 / 恢复自动轮播
-- 新增：`PagerViewTransformerType.supportsVertical` / `displayName`
-- 优化：Cell 默认关闭阴影（`isShadowEnabled`）；Timer 弱引用；密封内部 collectionView
-- Demo：全面重置为功能菜单 + 多场景展示
-
-### 2.0.6
-
-- 修复自动滚动问题
-- 修复分页问题
-- 修复其他问题
-
-### 2.0.5
-
-- 初始版本发布
-- 支持基础轮播与多种转场动画
-
-## 贡献
-
-欢迎提交 Issue 和 Pull Request。
-
-## 作者
-
-田风有
-
-## 许可证
-
-TFYSwiftBannerScroll 基于 MIT 许可证开源。详见 [LICENSE](LICENSE)。
+田风有 · MIT，详见 [LICENSE](LICENSE)。

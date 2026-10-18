@@ -48,12 +48,8 @@ class TFYSwiftPagerCollectionView: UICollectionView {
         self.decelerationRate = UIScrollView.DecelerationRate.fast
         self.showsVerticalScrollIndicator = false
         self.showsHorizontalScrollIndicator = false
-        if #available(iOS 10.0, *) {
-            self.isPrefetchingEnabled = false
-        }
-        if #available(iOS 11.0, *) {
-            self.contentInsetAdjustmentBehavior = .never
-        }
+        self.isPrefetchingEnabled = false
+        self.contentInsetAdjustmentBehavior = .never
         #if !os(tvOS)
             self.scrollsToTop = false
             self.isPagingEnabled = false
