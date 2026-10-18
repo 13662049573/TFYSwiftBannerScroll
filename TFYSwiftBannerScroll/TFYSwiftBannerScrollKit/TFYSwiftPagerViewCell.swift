@@ -22,6 +22,7 @@ open class TFYSwiftPagerViewCell: UICollectionViewCell {
         let textLabel = UILabel(frame: .zero)
         textLabel.textColor = .white
         textLabel.font = UIFont.preferredFont(forTextStyle: .body)
+        textLabel.adjustsFontForContentSizeCategory = true
         self.contentView.addSubview(view)
         view.addSubview(textLabel)
         
@@ -38,7 +39,7 @@ open class TFYSwiftPagerViewCell: UICollectionViewCell {
             return _imageView
         }
         let imageView = UIImageView(frame: .zero)
-        self.contentView.addSubview(imageView)
+        self.contentView.insertSubview(imageView, at: 0)
         _imageView = imageView
         return imageView
     }
@@ -119,7 +120,9 @@ open class TFYSwiftPagerViewCell: UICollectionViewCell {
         } else {
             self.contentView.layer.shadowOpacity = 0
             self.contentView.layer.shadowRadius = 0
+            self.contentView.layer.shadowPath = nil
         }
+        self.setNeedsLayout()
     }
     
     deinit {
@@ -144,6 +147,7 @@ open class TFYSwiftPagerViewCell: UICollectionViewCell {
             labelRect.origin.y += 1
             textLabel.frame = labelRect
         }
+        self.contentView.layer.shadowPath = self.isShadowEnabled ? UIBezierPath(rect: self.contentView.bounds).cgPath : nil
         if let selectedForegroundView = _selectedForegroundView {
             selectedForegroundView.frame = self.contentView.bounds
         }

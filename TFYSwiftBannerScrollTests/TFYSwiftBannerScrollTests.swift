@@ -349,6 +349,14 @@ final class TFYSwiftBannerScrollTests: XCTestCase {
         XCTAssertTrue(first === control.subviews[0].layer.sublayers!.first!)
     }
 
+    func testCellImageCreationDoesNotCoverPreviouslyCreatedLabel() {
+        let cell = TFYSwiftPagerViewCell(frame: CGRect(x: 0, y: 0, width: 320, height: 180))
+        let label = cell.textLabel!
+        let imageView = cell.imageView!
+        XCTAssertTrue(cell.contentView.subviews.first === imageView)
+        XCTAssertTrue(cell.contentView.subviews.last === label.superview)
+        XCTAssertTrue(label.adjustsFontForContentSizeCategory)
+    }
 
     func testZoomOutAtUnitScaleHasFiniteAlpha() {
         let f = makePager()
