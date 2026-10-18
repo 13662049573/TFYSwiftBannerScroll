@@ -12,6 +12,8 @@ open class TFYSwiftPageControl: UIControl {
     /// 页面控件的页面指示器数量。默认值为0。
     open var numberOfPages: Int = 0 {
         didSet {
+            self.numberOfPages = max(self.numberOfPages, 0)
+            self.currentPage = min(max(self.currentPage, 0), max(self.numberOfPages - 1, 0))
             self.setNeedsCreateIndicators()
         }
     }
@@ -19,6 +21,7 @@ open class TFYSwiftPageControl: UIControl {
     /// 当前页，由页面控件高亮显示。默认值为0。
     open var currentPage: Int = 0 {
         didSet {
+            self.currentPage = min(max(self.currentPage, 0), max(self.numberOfPages - 1, 0))
             self.setNeedsUpdateIndicators()
         }
     }
@@ -90,11 +93,13 @@ open class TFYSwiftPageControl: UIControl {
     
     open override func layoutSubviews() {
         super.layoutSubviews()
+        self.createIndicatorsIfNecessary()
+        self.updateIndicatorsIfNecessary()
         self.contentView.frame = {
             let x = self.contentInsets.left
             let y = self.contentInsets.top
-            let width = self.frame.width - self.contentInsets.left - self.contentInsets.right
-            let height = self.frame.height - self.contentInsets.top - self.contentInsets.bottom
+            let width = max(self.bounds.width - self.contentInsets.left - self.contentInsets.right, 0)
+            let height = max(self.bounds.height - self.contentInsets.top - self.contentInsets.bottom, 0)
             return CGRect(x: x, y: y, width: width, height: height)
         }()
     }
@@ -110,10 +115,10 @@ open class TFYSwiftPageControl: UIControl {
                 return 0
             case .center, .fill:
                 let midX = self.contentView.bounds.midX
-                let amplitude = CGFloat(self.numberOfPages / 2) * diameter + spacing * CGFloat((self.numberOfPages - 1) / 2)
-                return midX - amplitude
+                let contentWidth = diameter * CGFloat(self.numberOfPages) + spacing * CGFloat(max(self.numberOfPages - 1, 0))
+                return midX - contentWidth * 0.5
             case .right, .trailing:
-                let contentWidth = diameter * CGFloat(self.numberOfPages) + CGFloat(self.numberOfPages - 1) * spacing
+                let contentWidth = diameter * CGFloat(self.numberOfPages) + CGFloat(max(self.numberOfPages - 1, 0)) * spacing
                 return contentView.frame.width - contentWidth
             default:
                 return 0
@@ -180,9 +185,7 @@ open class TFYSwiftPageControl: UIControl {
     fileprivate func setNeedsUpdateIndicators() {
         self.needsUpdateIndicators = true
         self.setNeedsLayout()
-        DispatchQueue.main.async {
-            self.updateIndicatorsIfNecessary()
-        }
+
     }
     
     fileprivate func updateIndicatorsIfNecessary() {
@@ -191,15 +194,14 @@ open class TFYSwiftPageControl: UIControl {
         self.needsUpdateIndicators = false
         self.contentView.isHidden = self.hidesForSinglePage && self.numberOfPages <= 1
         if !self.contentView.isHidden {
-            self.indicatorLayers.forEach { layer in
+            for (index, layer) in self.indicatorLayers.enumerated() {
                 layer.isHidden = false
-                self.updateIndicatorAttributes(for: layer)
+                self.updateIndicatorAttributes(for: layer, at: index)
             }
         }
     }
     
-    fileprivate func updateIndicatorAttributes(for layer: CAShapeLayer) {
-        let index = self.indicatorLayers.firstIndex(of: layer)
+    fileprivate func updateIndicatorAttributes(for layer: CAShapeLayer, at index: Int) {
         let state: UIControl.State = index == self.currentPage ? .selected : .normal
         let key = state.rawValue
         if let image = self.images[key] {
@@ -226,9 +228,7 @@ open class TFYSwiftPageControl: UIControl {
     
     fileprivate func setNeedsCreateIndicators() {
         self.needsCreateIndicators = true
-        DispatchQueue.main.async {
-            self.createIndicatorsIfNecessary()
-        }
+        self.setNeedsLayout()
     }
     
     fileprivate func createIndicatorsIfNecessary() {
@@ -241,9 +241,10 @@ open class TFYSwiftPageControl: UIControl {
         } else if self.currentPage >= self.numberOfPages {
             self.currentPage = self.numberOfPages - 1
         }
-        self.indicatorLayers.forEach { $0.removeFromSuperlayer() }
-        self.indicatorLayers.removeAll()
-        for _ in 0..<self.numberOfPages {
+        while self.indicatorLayers.count > self.numberOfPages {
+            self.indicatorLayers.removeLast().removeFromSuperlayer()
+        }
+        while self.indicatorLayers.count < self.numberOfPages {
             let layer = CAShapeLayer()
             layer.actions = ["bounds": NSNull()]
             self.contentView.layer.addSublayer(layer)
