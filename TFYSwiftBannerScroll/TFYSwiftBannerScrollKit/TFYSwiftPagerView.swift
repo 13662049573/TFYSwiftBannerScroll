@@ -237,7 +237,9 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
             : self.collectionView.contentOffset.y
         let count = CGFloat(self.transformer?.type == .grid ? self.collectionViewLayout.pageCount : self.numberOfItems)
         guard count > 0 else { return 0 }
-        let offset = fmod(contentOffset / spacing, count)
+        let units = contentOffset / spacing
+        if self.numberOfSections <= 1 { return min(max(units, 0), count - 1) }
+        let offset = fmod(units, count)
         return offset < 0 ? offset + count : offset
     }
     
@@ -261,6 +263,7 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
     internal var numberOfItems: Int = 0
     internal var numberOfSections: Int = 0
     
+    fileprivate let emptyCellIdentifier = "TFYSwiftPagerView.empty"
     fileprivate var dequeingSection = 0
     fileprivate var centermostIndexPath: IndexPath {
         guard self.numberOfItems > 0, self.collectionView.contentSize != .zero else {
@@ -372,8 +375,11 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
     public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let index = indexPath.item
         self.dequeingSection = indexPath.section
-        let cell = self.dataSource!.pagerView(self, cellForItemAt: index)
-        return cell
+        guard let dataSource = self.dataSource else {
+            // A weak data source may disappear while UIKit still has pending cell requests.
+            return collectionView.dequeueReusableCell(withReuseIdentifier: self.emptyCellIdentifier, for: indexPath)
+        }
+        return dataSource.pagerView(self, cellForItemAt: index)
     }
     
     // MARK: - UICollectionViewDelegate
@@ -622,6 +628,7 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
         
         let collectionViewLayout = TFYSwiftPagerViewLayout()
         let collectionView = TFYSwiftPagerCollectionView(frame: .zero, collectionViewLayout: collectionViewLayout)
+        collectionView.register(TFYSwiftPagerViewCell.self, forCellWithReuseIdentifier: self.emptyCellIdentifier)
         collectionView.dataSource = self
         collectionView.delegate = self
         collectionView.backgroundColor = .clear
