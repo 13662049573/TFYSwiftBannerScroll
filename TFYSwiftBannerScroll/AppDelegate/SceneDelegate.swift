@@ -19,6 +19,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         if let windowScene = scene as? UIWindowScene {
             let window = UIWindow(windowScene: windowScene)
             window.rootViewController = UINavigationController(rootViewController: DemoMenuViewController())
+            if ProcessInfo.processInfo.environment["DEMO_APPEARANCE"] == "dark" {
+                window.overrideUserInterfaceStyle = .dark
+            }
             self.window = window
             window.makeKeyAndVisible()
         }

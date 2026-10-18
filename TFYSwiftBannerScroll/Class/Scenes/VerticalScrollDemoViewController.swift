@@ -1,60 +1,26 @@
-//
-//  VerticalScrollDemoViewController.swift
-//  TFYSwiftBannerScroll
-//
-
 import UIKit
 
 final class VerticalScrollDemoViewController: DemoPagerBaseViewController {
-    
-    private let verticalTypes = PagerViewTransformerType.allCases.filter(\.supportsVertical)
-    private var typeIndex = 0
-    private let typeLabel = UILabel()
-    
-    init() {
-        super.init(title: "垂直滚动")
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
+    private let types = PagerViewTransformerType.allCases.filter(\.supportsVertical)
+    init() { super.init(title: "垂直滚动") }
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
     override func configureDemo() {
+        describe("直接在上方预览中上下滑动。只列出 supportsVertical 为 true 的样式。")
+        useCardSize(width: 0.92, height: 0.7)
         pagerView.scrollDirection = .vertical
         pagerView.isInfinite = true
-        pagerView.automaticSlidingInterval = 3
-        pagerView.itemSize = CGSize(width: UIScreen.main.bounds.width - 48, height: 160)
-        applyType(at: 0)
-        
-        typeLabel.font = .systemFont(ofSize: 15, weight: .semibold)
-        typeLabel.textAlignment = .center
-        controlsContainer.addArrangedSubview(typeLabel)
-        
-        let tip = UILabel()
-        tip.text = "已过滤仅水平动画：overlap / linear / coverFlow / ferrisWheel"
-        tip.font = .preferredFont(forTextStyle: .caption1)
-        tip.textColor = .secondaryLabel
-        tip.numberOfLines = 0
-        controlsContainer.addArrangedSubview(tip)
-        
-        let row = UIStackView()
-        row.axis = .horizontal
-        row.spacing = 12
-        row.distribution = .fillEqually
-        row.addArrangedSubview(makeButton("上一个") { [weak self] in self?.step(-1) })
-        row.addArrangedSubview(makeButton("下一个") { [weak self] in self?.step(1) })
-        controlsContainer.addArrangedSubview(row)
-    }
-    
-    private func step(_ delta: Int) {
-        typeIndex = (typeIndex + delta + verticalTypes.count) % verticalTypes.count
-        applyType(at: typeIndex)
-    }
-    
-    private func applyType(at index: Int) {
-        let type = verticalTypes[index]
-        pagerView.transformer = TFYSwiftPagerViewTransformer(type: type)
-        typeLabel.text = "\(type.displayName)（\(index + 1)/\(verticalTypes.count)）"
-        setStatus("vertical + \(type.displayName)")
+        let styles = addSection("垂直布局", detail: "仅水平：overlap、linear、coverFlow、ferrisWheel、invertedFerrisWheel。")
+        styles.addArrangedSubview(makeChoiceRow(title: "垂直转场", options: ["无转场"] + types.map(\.displayName)) { [weak self] index in
+            guard let self else { return }
+            self.pagerView.isPagingEnabled = false
+            self.pagerView.transformer = index == 0 ? nil : TFYSwiftPagerViewTransformer(type: self.types[index - 1])
+            if self.pagerView.transformer?.type == .grid { self.pagerView.configureGridLayout(rows: 2, columns: 3, spacing: 8) }
+            else { self.pagerView.isInfinite = true }
+            self.updatePageCount()
+        })
+        styles.addArrangedSubview(makeSwitchRow(title: "自动上下翻页", isOn: false) { [weak self] in self?.pagerView.automaticSlidingInterval = $0 ? 2.5 : 0 })
+        styles.addArrangedSubview(makeSwitchRow(title: "始终垂直回弹", isOn: false) { [weak self] in self?.pagerView.alwaysBounceVertical = $0 })
+        styles.addArrangedSubview(makeSliderRow(title: "垂直卡片间距", value: 0, min: 0, max: 40) { [weak self] in self?.pagerView.interitemSpacing = CGFloat($0) })
+        setStatus("scrollDirection = .vertical")
     }
 }

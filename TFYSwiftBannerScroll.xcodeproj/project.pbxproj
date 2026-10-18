@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A0B100000000000000000002 /* DemoNibBannerCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = A0B100000000000000000001 /* DemoNibBannerCell.xib */; };
 		CEF7F5C5CADD48779D6E2727 /* DemoMenuViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E09844042AE84A60B1F47A42 /* DemoMenuViewController.swift */; };
 		094FB5F18A494552AE5BDE29 /* DemoImages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 460BD2A883A049DFAE7FCD6B /* DemoImages.swift */; };
 		0C96C1D23E04453E9C06E11A /* DemoPagerBaseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CDC93DCC320491A867E5F91 /* DemoPagerBaseViewController.swift */; };
@@ -54,6 +55,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		A0B100000000000000000001 /* DemoNibBannerCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = DemoNibBannerCell.xib; sourceTree = "<group>"; };
 		E09844042AE84A60B1F47A42 /* DemoMenuViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoMenuViewController.swift; sourceTree = "<group>"; };
 		460BD2A883A049DFAE7FCD6B /* DemoImages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoImages.swift; sourceTree = "<group>"; };
 		1CDC93DCC320491A867E5F91 /* DemoPagerBaseViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoPagerBaseViewController.swift; sourceTree = "<group>"; };
@@ -180,6 +182,7 @@
 				460BD2A883A049DFAE7FCD6B /* DemoImages.swift */,
 				1CDC93DCC320491A867E5F91 /* DemoPagerBaseViewController.swift */,
 				2296DD5B90944EF6BABD2873 /* DemoBannerCell.swift */,
+				A0B100000000000000000001 /* DemoNibBannerCell.xib */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -332,6 +335,7 @@
 			files = (
 				36BC112D265547AB00B0FFE9 /* LaunchScreen.storyboard in Resources */,
 				36BC112A265547AB00B0FFE9 /* Assets.xcassets in Resources */,
+				A0B100000000000000000002 /* DemoNibBannerCell.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -454,6 +454,29 @@ final class TFYSwiftBannerScrollTests: XCTestCase {
         }
     }
 
-
+    #if !SWIFT_PACKAGE
+    func testDemoExposesEveryTransformerParameterAndCustomExtension() {
+        let scene = TransformersDemoViewController()
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
+        window.rootViewController = scene
+        window.makeKeyAndVisible()
+        scene.loadViewIfNeeded()
+        var exposed = Set<String>()
+        func visit(_ view: UIView) {
+            if view is UISlider, let identifier = view.accessibilityIdentifier { exposed.insert(identifier) }
+            view.subviews.forEach(visit)
+        }
+        for index in 0...22 {
+            scene.selectStyle(at: index)
+            scene.view.layoutIfNeeded()
+            visit(scene.controlsContainer)
+        }
+        let required: Set<String> = ["minimumScale", "minimumAlpha", "perspective", "springDamping", "parallaxFactor", "rotationAngle", "waveHeight", "cylinderRadius", "flipAngle", "cardSpacing", "windmillSpeed", "accordionFactor", "carouselRadius", "stackOffset", "gridRows", "gridColumns", "gridSpacing"]
+        XCTAssertTrue(required.isSubset(of: exposed), "Missing controls: \(required.subtracting(exposed))")
+        XCTAssertTrue(scene.pagerView.transformer is DemoTiltTransformer)
+        window.isHidden = true
+        window.rootViewController = nil
+    }
+    #endif
 
 }
