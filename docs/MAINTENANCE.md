@@ -1,5 +1,15 @@
 # 维护记录
 
+## 2026-10-18 · 3.0.1
+
+- 用户要求：更新 README、Podspec、Package 相关说明与版本号；从已有 3.0.0 递增为补丁版本 3.0.1。
+- 同步 README 当前版本、安装示例与更新日志，Podspec version / source tag，以及 Demo 版本 3.0.1 / build 4。
+- Package.swift 明确 `swiftLanguageVersions: [.v5]`；版本由仓库 tag 管理，不向清单添加不存在的 version 字段。最低 iOS 16、Swift tools 5.7 不变。
+- 验证时间：2026-10-18T20:07:20.280737+08:00（北京时间），本机账号 tianfengyou；环境为本地清单编译、解析和元数据校验，无业务账号 / 真机操作。
+- #1 | Package.swift:22、TFYSwiftBannerScrollKit.podspec:5、README.md:8、TFYSwiftBannerScroll/Info.plist:18 | tag 3.0.1 | 清单解析和版本一致性 | 通过 | `/tmp/tfy-banner-version-3.0.1/validation.json`（664 bytes）、package.json（1536 bytes）、podspec.json（1184 bytes） | Swift 清单编译、Podspec 解析及 Ruby 语法、plist 校验、版本 / tag / 平台 / 语言模式 / 安装示例断言均通过。
+- 本次只调整发布配置与元数据，未重跑业务和 UI 测试；下方 3.0.0 测试结果为历史记录，不作为本轮重新运行证据。
+- 发布状态：添加本地 3.0.1 tag；未推送、未发布 CocoaPods / GitHub Release。原有 3.0.0 tag 保留。
+
 ## 2026-10-18 · 3.0.0
 
 - 用户要求：全面熟悉、补充优缺点并优化，添加新版本，支持 Swift Package Manager，最低 iOS 16。

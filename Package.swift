@@ -18,5 +18,6 @@ let package = Package(
             path: "TFYSwiftBannerScrollTests",
             exclude: ["Info.plist"]
         )
-    ]
+    ],
+    swiftLanguageVersions: [.v5]
 )

@@ -5,7 +5,7 @@
 - 最低 **iOS 16.0**
 - Swift 5.7+ / Xcode 14+，使用 Swift 5 语言模式
 - Swift Package Manager、CocoaPods、源码集成
-- 当前版本 **3.0.0**（最低系统版本调整，升级前请检查宿主部署版本）
+- 当前版本 **3.0.1**（3.x 最低支持 iOS 16，升级前请检查宿主部署版本）
 
 ## 安装
 
@@ -19,8 +19,8 @@ Xcode → File → Add Package Dependencies，填入仓库地址：
 https://github.com/13662049573/TFYSwiftBannerScroll.git
 ```
 
-发布 `3.0.0` tag 后，选择 **Up to Next Major Version / 3.0.0**，添加产品 **TFYSwiftBannerScrollKit**。
-当前工作区可直接通过 **Add Local** 选择仓库目录验证；仅修改本地版本号不会自动发布远程版本。
+发布 `3.0.1` tag 后，选择 **Up to Next Major Version / 3.0.1**，添加产品 **TFYSwiftBannerScrollKit**。
+当前工作区可直接通过 **Add Local** 选择仓库目录验证。Swift Package 的版本由 Git tag 管理，`Package.swift` 声明产品、平台和 Swift 语言模式；本地 tag 需要推送后才能用于远程版本解析。
 
 其他 Package 的清单示例：
 
@@ -32,7 +32,7 @@ let package = Package(
     name: "MyAppFeature",
     platforms: [.iOS(.v16)],
     dependencies: [
-        .package(url: "https://github.com/13662049573/TFYSwiftBannerScroll.git", from: "3.0.0")
+        .package(url: "https://github.com/13662049573/TFYSwiftBannerScroll.git", from: "3.0.1")
     ],
     targets: [
         .target(name: "MyAppFeature", dependencies: [
@@ -48,7 +48,7 @@ let package = Package(
 
 ```ruby
 platform :ios, '16.0'
-pod 'TFYSwiftBannerScrollKit', '~> 3.0'
+pod 'TFYSwiftBannerScrollKit', '~> 3.0.1'
 ```
 
 ### 手动集成
@@ -193,6 +193,13 @@ pager.transformer = TFYSwiftPagerViewTransformer(type: .grid)
 优点：无依赖、UIKit 原生、可复用 Cell、按可见区域计算布局、弱引用代理与计时器回调、21 种样式及公开扩展点；Package 与 Pod 使用同一份核心源码。
 
 限制：只发布 iOS UIKit 产品；SwiftUI 需要宿主包装 `UIViewRepresentable`。不包含图片下载 / 缓存、SwiftUI 原生接口或点击式页面指示器。部分转场仅水平；网格不提供无限循环。复杂 3D 动画仍需在目标真机评估视觉与性能。
+
+## 3.0.1 更新
+
+- 同步 CocoaPods 版本、安装示例与 Demo 版本信息为 3.0.1。
+- Package 清单明确使用 Swift 5 语言模式，与 CocoaPods 和示例工程保持一致；最低工具链仍为 Swift 5.7 / Xcode 14。
+- 补充 Podspec 中的集成方式、10 个交互 Demo 与语言模式说明。
+- 保留 3.0.0 的轮播能力、公共 API 和 iOS 16 最低系统要求。
 
 ## 3.0.0 更新
 

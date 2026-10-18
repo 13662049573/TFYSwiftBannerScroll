@@ -2,7 +2,7 @@ Pod::Spec.new do |spec|
 
   spec.name         = "TFYSwiftBannerScrollKit"
 
-  spec.version      = "3.0.0"
+  spec.version      = "3.0.1"
 
   spec.summary      = "Swift 无限轮播组件：自定义 Cell、页面指示器、多种卡片转场，最低 iOS 16 / Swift 5.7+。"
 
@@ -10,7 +10,8 @@ Pod::Spec.new do |spec|
 TFYSwiftBannerScrollKit 是 Swift 版无限轮播组件。
 支持水平/垂直滚动、自动轮播、无限循环、自定义 Cell 与页面指示器，
 内置 21 种转场动画（含网格布局），并提供 contentInsets、isPagingEnabled、
-didChangeIndex 等公开 API。最低支持 iOS 16、Swift 5.7+。
+didChangeIndex 等公开 API。支持 CocoaPods、Swift Package Manager 和源码集成，
+附带 10 个交互 Demo 场景。最低支持 iOS 16、Swift 5.7+，使用 Swift 5 语言模式。
                    DESC
 
   spec.homepage     = "https://github.com/13662049573/TFYSwiftBannerScroll"
