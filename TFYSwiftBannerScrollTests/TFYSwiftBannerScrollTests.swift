@@ -438,6 +438,66 @@ final class TFYSwiftBannerScrollTests: XCTestCase {
         pager.removeFromSuperview()
     }
 
+    func testStackDragKeepsForegroundOpaqueAndHidesDistantRepeatedCards() {
+        for direction in [TFYSwiftPagerView.ScrollDirection.horizontal, .vertical] {
+            for infinite in [false, true] {
+                let f = makePager(count: 7, direction: direction, infinite: infinite)
+                f.pager.itemSize = CGSize(width: 230, height: 150)
+                f.pager.transformer = TFYSwiftPagerViewTransformer(type: .stack)
+                f.collection.layoutIfNeeded()
+                f.pager.scrollToItem(at: 3, animated: false)
+                let origin = f.collection.contentOffset
+                for step in -10...10 {
+                    let fraction = CGFloat(step) / 10
+                    var offset = origin
+                    if direction == .horizontal { offset.x += fraction * f.layout.itemSpacing }
+                    else { offset.y += fraction * f.layout.itemSpacing }
+                    f.collection.contentOffset = offset
+                    f.collection.layoutIfNeeded()
+                    let attributes = (f.layout.layoutAttributesForElements(in: f.collection.bounds) ?? [])
+                        .compactMap { $0 as? TFYSwiftPagerViewLayoutAttributes }
+                    let visible = attributes.filter { $0.alpha > 0 }
+                    XCTAssertFalse(visible.isEmpty)
+                    XCTAssertLessThanOrEqual(visible.count, 4, "Repeated cards must disappear during dragging")
+                    for item in attributes {
+                        if abs(item.position) <= 1 { XCTAssertEqual(item.alpha, 1) }
+                        if abs(item.position) >= 2 { XCTAssertEqual(item.alpha, 0) }
+                        XCTAssertGreaterThanOrEqual(item.transform.a, 0.8)
+                        for farther in visible where abs(farther.position) > abs(item.position) + 0.01 {
+                            XCTAssertGreaterThan(item.zIndex, farther.zIndex)
+                        }
+                    }
+                    let front = visible.max { $0.zIndex < $1.zIndex }!
+                    XCTAssertEqual(front.alpha, 1)
+                    XCTAssertLessThanOrEqual(abs(front.position), 0.501)
+                }
+            }
+        }
+    }
+
+    func testStackFractionalLayersAndTransformsRemainContinuous() {
+        let f = makePager()
+        let transformer = TFYSwiftPagerViewTransformer(type: .stack)
+        f.pager.transformer = transformer
+        func value(_ position: CGFloat) -> TFYSwiftPagerViewLayoutAttributes {
+            let item = TFYSwiftPagerViewLayoutAttributes(forCellWith: IndexPath(item: 0, section: 0))
+            item.size = CGSize(width: 230, height: 150)
+            item.position = position
+            transformer.applyTransform(to: item)
+            return item
+        }
+        XCTAssertGreaterThan(value(0.2).zIndex, value(-0.8).zIndex)
+        XCTAssertGreaterThan(value(-0.2).zIndex, value(0.8).zIndex)
+        XCTAssertNotEqual(value(-0.5).zIndex, value(0.5).zIndex)
+        for boundary: CGFloat in [-2, -1, 0, 1, 2] {
+            let before = value(boundary - 0.0001), after = value(boundary + 0.0001)
+            XCTAssertEqual(before.alpha, after.alpha, accuracy: 0.001)
+            XCTAssertEqual(before.transform.a, after.transform.a, accuracy: 0.001)
+            XCTAssertEqual(before.transform.tx, after.transform.tx, accuracy: 0.01)
+            XCTAssertEqual(before.transform.ty, after.transform.ty, accuracy: 0.01)
+        }
+    }
+
     func testEveryBuiltInTransformerProducesFiniteLayoutAttributes() {
         let f = makePager()
         XCTAssertEqual(PagerViewTransformerType.allCases.count, 21)

@@ -479,6 +479,7 @@ open class TFYSwiftPagerViewTransformer: NSObject {
             
         case .stack:  // 堆叠效果
             var transform = CGAffineTransform.identity
+            let distance = abs(position)
             let offset = stackOffset * position
             
             switch scrollDirection {
@@ -488,12 +489,15 @@ open class TFYSwiftPagerViewTransformer: NSObject {
                 transform = transform.translatedBy(x: abs(offset), y: offset)
             }
             
-            let scale = 1 - min(abs(position) * 0.1, 0.1)
+            let scale = 1 - min(distance, 2) * 0.1
             transform = transform.scaledBy(x: scale, y: scale)
             
             attributes.transform = transform
-            attributes.alpha = 1 - min(abs(position) * 0.4, 0.4)
-            attributes.zIndex = Int(10 - abs(position))
+            // Keep the foreground opaque; fade out cards beyond the immediate neighbours.
+            // A constant alpha for every distant card exposes the entire repeated deck while dragging.
+            attributes.alpha = max(0, min(1, 2 - distance))
+            // Fractional positions need distinct layers, including a deterministic tie at half a step.
+            attributes.zIndex = Int((2 - min(distance, 2)) * 10_000) * 2 + (position <= 0 ? 1 : 0)
         case .grid:  // 网格布局效果
             // 网格模式下不需要特殊的变换效果
             attributes.alpha = 1.0
