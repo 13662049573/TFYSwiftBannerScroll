@@ -117,6 +117,11 @@ final class TFYSwiftBannerScrollUITests: XCTestCase {
             table.swipeUp() // Dismiss the keyboard before inspecting or dragging the card.
             let preview = app.cells["gallery.\(name)"]
             XCTAssertTrue(preview.waitForExistence(timeout: 3), name)
+            let pager = app.descendants(matching: .any)["preview.\(name)"]
+            XCTAssertEqual(pager.frame.height, name == "posterStack" ? 300 : 200, accuracy: 1, name)
+            let details = app.buttons["details.\(name)"]
+            XCTAssertGreaterThanOrEqual(details.frame.height, 44, name)
+            XCTAssertLessThanOrEqual(details.frame.maxY, preview.frame.maxY - 15, name)
             snapshot("gallery-\(name)")
             let start = preview.coordinate(withNormalizedOffset: CGVector(dx: 0.75, dy: 0.5))
             let end = preview.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5))

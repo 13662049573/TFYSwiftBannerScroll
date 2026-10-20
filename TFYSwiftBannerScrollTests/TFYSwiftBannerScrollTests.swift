@@ -793,6 +793,60 @@ final class TFYSwiftBannerScrollTests: XCTestCase {
     }
 
     #if !SWIFT_PACKAGE
+    func testGalleryReusePreservesPosterAndButtonDuringTransientRowHeight() {
+        let cell = DemoCardGalleryCell(style: .default, reuseIdentifier: "reuse")
+        let column = cell.contentView.subviews.compactMap { $0 as? UIStackView }.first!
+        let button = column.arrangedSubviews.compactMap { $0 as? UIButton }.first!
+        let normal = DemoCardGalleryViewController.styles.first { $0.type == .crossFading }!
+        let poster = DemoCardGalleryViewController.styles.first { $0.type == .posterStack }!
+        // UITableView briefly keeps the previous row's height when reusing a cell.
+        let staleHeight = cell.contentView.heightAnchor.constraint(equalToConstant: 341.667)
+        staleHeight.identifier = "Test.PreviousRowHeight"
+        for width: CGFloat in [320, 440, 844] {
+            for style in [normal, poster, normal, poster] {
+                cell.prepareForReuse()
+                cell.frame = CGRect(x: 0, y: 0, width: width, height: 341.667)
+                staleHeight.isActive = true
+                cell.configure(style: style)
+                cell.layoutIfNeeded()
+                let previewHeight: CGFloat = style.type == .posterStack ? 300 : 200
+                XCTAssertEqual(cell.pager.bounds.height, previewHeight, accuracy: 0.01)
+                XCTAssertGreaterThanOrEqual(button.bounds.height, 44)
+                staleHeight.isActive = false
+                let fitted = cell.contentView.systemLayoutSizeFitting(
+                    CGSize(width: width, height: 0), withHorizontalFittingPriority: .required,
+                    verticalFittingPriority: .fittingSizeLevel)
+                cell.frame.size = fitted
+                cell.setNeedsLayout()
+                cell.layoutIfNeeded()
+                XCTAssertGreaterThan(fitted.height, previewHeight + 76)
+                XCTAssertEqual(column.frame.maxY, cell.contentView.bounds.height - 16, accuracy: 0.5)
+                XCTAssertEqual(cell.pager.bounds.height, previewHeight, accuracy: 0.01)
+                XCTAssertGreaterThanOrEqual(button.bounds.height, 44)
+                XCTAssertFalse(column.hasAmbiguousLayout)
+            }
+        }
+    }
+
+    func testGalleryDoesNotReadVisibleCellsBeforeEnteringWindow() {
+        class TrackingTableView: UITableView {
+            var offWindowReads = 0
+            override var visibleCells: [UITableViewCell] {
+                if window == nil { offWindowReads += 1 }
+                return super.visibleCells
+            }
+        }
+        let scene = DemoCardGalleryViewController()
+        scene.loadViewIfNeeded()
+        let table = TrackingTableView(frame: .zero, style: .insetGrouped)
+        scene.tableView = table
+        scene.beginAppearanceTransition(true, animated: false)
+        scene.endAppearanceTransition()
+        scene.beginAppearanceTransition(false, animated: false)
+        scene.endAppearanceTransition()
+        XCTAssertEqual(table.offWindowReads, 0, "Visibility queries must wait until the table is in a window")
+    }
+
     func testMenuHeaderSurvivesZeroHeightMeasurementAndRefitsAcrossWidths() {
         let scene = DemoMenuViewController()
         scene.loadViewIfNeeded()

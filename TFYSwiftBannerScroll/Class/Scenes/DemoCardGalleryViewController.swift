@@ -51,8 +51,8 @@ final class DemoCardGalleryViewController: UITableViewController, UISearchResult
         navigationItem.hidesSearchBarWhenScrolling = false
         definesPresentationContext = true
     }
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
         isScreenVisible = true
         updateVisibleAutoplay()
     }
@@ -67,6 +67,8 @@ final class DemoCardGalleryViewController: UITableViewController, UISearchResult
         updateVisibleAutoplay()
     }
     private func updateVisibleAutoplay() {
+        // Reading visibleCells before attachment forces UITableView to lay out off-window.
+        guard isViewLoaded, tableView.window != nil else { return }
         for case let cell as DemoCardGalleryCell in tableView.visibleCells {
             cell.setAutoplay(autoplay && isScreenVisible)
         }
@@ -142,9 +144,13 @@ final class DemoCardGalleryCell: UITableViewCell, TFYSwiftPagerViewDataSource, T
         let width = column.widthAnchor.constraint(equalTo: contentView.widthAnchor, constant: -32)
         width.priority = .defaultHigh
         previewHeight = pager.heightAnchor.constraint(equalToConstant: 200)
+        // Reuse can retain the previous row height until UITableView finishes self-sizing.
+        // Yield only the bottom inset during that pass, preserving the preview and touch target.
+        let bottom = column.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16)
+        bottom.priority = .init(999)
         NSLayoutConstraint.activate([
             column.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 16),
-            column.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16),
+            bottom,
             column.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             column.widthAnchor.constraint(lessThanOrEqualTo: contentView.widthAnchor, constant: -32),
             column.widthAnchor.constraint(lessThanOrEqualToConstant: 760), width, previewHeight
