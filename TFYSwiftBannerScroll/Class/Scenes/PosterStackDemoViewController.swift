@@ -33,7 +33,6 @@ final class PosterStackDemoViewController: DemoPagerBaseViewController {
         })
         layout.addArrangedSubview(makeSliderRow(title: "展开间距 cardSpacing", value: 10, min: 0, max: 36) { [weak self] in
             self?.pagerView.transformer?.cardSpacing = CGFloat($0)
-            self?.pagerView.reloadData()
         })
         layout.addArrangedSubview(makeSwitchRow(title: "自动切换海报", isOn: false) { [weak self] in
             self?.pagerView.automaticSlidingInterval = $0 ? 3 : 0

@@ -231,6 +231,9 @@ extension PagerViewTransformerType {
         case .stack: return "stack"
         case .grid: return "grid"
         case .posterStack: return "posterStack"
+        case .fan: return "fan"
+        case .throwCard: return "throwCard"
+        case .bookFlip: return "bookFlip"
         }
     }
 }

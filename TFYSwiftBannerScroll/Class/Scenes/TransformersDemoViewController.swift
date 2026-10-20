@@ -101,21 +101,24 @@ final class TransformersDemoViewController: DemoPagerBaseViewController {
             case .ferrisWheel, .invertedFerrisWheel: values = [("minimumAlpha", \.minimumAlpha, 0, 1)]
             case .rotate3D: values = [("rotationAngle", \.rotationAngle, 0, 6.28), ("perspective", \.perspective, -0.01, 0)]
             case .parallax: values = [("parallaxFactor", \.parallaxFactor, 0, 2)]
-            case .springy: values = [("springDamping", \.springDamping, 0, 2)]
+            case .springy: values = [("springDamping", \.springDamping, 0, 1)]
             case .flip: values = [("flipAngle", \.flipAngle, 0, 6.28), ("perspective", \.perspective, -0.01, 0)]
-            case .cards: values = [("cardSpacing", \.cardSpacing, 0, 48)]
+            case .cards: values = [("cardSpacing", \.cardSpacing, 0, 48), ("minimumScale", \.minimumScale, 0.2, 1)]
             case .cylinder: values = [("cylinderRadius", \.cylinderRadius, 20, 500), ("perspective", \.perspective, -0.01, 0)]
-            case .wave: values = [("waveHeight", \.waveHeight, 0, 120)]
+            case .wave: values = [("waveHeight", \.waveHeight, 0, 120), ("minimumScale", \.minimumScale, 0.2, 1)]
             case .windmill: values = [("windmillSpeed", \.windmillSpeed, 0, 3)]
             case .accordion: values = [("accordionFactor", \.accordionFactor, 0, 1)]
             case .carousel: values = [("carouselRadius", \.carouselRadius, 20, 600), ("perspective", \.perspective, -0.01, 0)]
             case .stack: values = [("stackOffset", \.stackOffset, 0, 48)]
             case .posterStack: values = [("minimumScale", \.minimumScale, 0.7, 1), ("minimumAlpha", \.minimumAlpha, 0.2, 1), ("rotationAngle", \.rotationAngle, 0, 0.35), ("cardSpacing", \.cardSpacing, 0, 36)]
+            case .fan, .throwCard: values = [("rotationAngle", \.rotationAngle, 0, 0.6), ("minimumScale", \.minimumScale, 0.5, 1), ("minimumAlpha", \.minimumAlpha, 0, 1), ("cardSpacing", \.cardSpacing, 0, 48)]
+            case .bookFlip: values = [("rotationAngle", \.rotationAngle, 0, 1.57), ("perspective", \.perspective, -0.01, 0), ("minimumAlpha", \.minimumAlpha, 0, 1)]
+            case .coverFlow, .cubic: values = [("perspective", \.perspective, -0.01, 0)]
             case .grid:
                 parameterRows.addArrangedSubview(makeSliderRow(title: "gridRows", value: 2, min: 1, max: 4, step: 1) { [weak self] in self?.pagerView.transformer?.gridRows = Int($0.rounded()); self?.updatePageCount() })
                 parameterRows.addArrangedSubview(makeSliderRow(title: "gridColumns", value: 3, min: 1, max: 5, step: 1) { [weak self] in self?.pagerView.transformer?.gridColumns = Int($0.rounded()); self?.updatePageCount() })
                 values = [("gridSpacing", \.gridSpacing, 0, 30)]
-            case .crossFading, .coverFlow, .cubic: break
+            case .crossFading: break
             }
         }
         for (name, key, minimum, maximum) in values {
@@ -125,7 +128,6 @@ final class TransformersDemoViewController: DemoPagerBaseViewController {
                 if key == \.parallaxFactor { self.pagerView.parallaxFactor = CGFloat(value) }
                 else if key == \.rotationAngle { self.pagerView.rotationAngle = CGFloat(value) }
                 else { current[keyPath: key] = CGFloat(value) }
-                self.pagerView.reloadData()
             })
         }
         parameterRows.addArrangedSubview(makeSliderRow(title: "卡片间距（由 Transformer 决定是否覆盖）", value: Float(pagerView.interitemSpacing), min: 0, max: 40) { [weak self] in self?.pagerView.interitemSpacing = CGFloat($0) })

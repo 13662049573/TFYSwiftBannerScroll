@@ -660,9 +660,70 @@ final class TFYSwiftBannerScrollTests: XCTestCase {
         }
     }
 
+    func testNewStylesPreserveRawValuesAndUseDistinctCardGeometry() {
+        XCTAssertEqual(PagerViewTransformerType.posterStack.rawValue, 21)
+        XCTAssertEqual(PagerViewTransformerType.fan.rawValue, 22)
+        XCTAssertEqual(PagerViewTransformerType.throwCard.rawValue, 23)
+        XCTAssertEqual(PagerViewTransformerType.bookFlip.rawValue, 24)
+        let f = makePager()
+        f.pager.itemSize = CGSize(width: 230, height: 150)
+        for direction in [TFYSwiftPagerView.ScrollDirection.horizontal, .vertical] {
+            f.pager.scrollDirection = direction
+            func value(_ type: PagerViewTransformerType, _ position: CGFloat) -> TFYSwiftPagerViewLayoutAttributes {
+                f.pager.transformer = TFYSwiftPagerViewTransformer(type: type)
+                let item = TFYSwiftPagerViewLayoutAttributes(forCellWith: IndexPath(item: 0, section: 0))
+                item.size = f.pager.itemSize
+                let stride = (direction == .horizontal ? item.size.width : item.size.height) + f.pager.transformer!.proposedInteritemSpacing()
+                item.center = CGPoint(x: 160 + (direction == .horizontal ? position * stride : 0),
+                                      y: 90 + (direction == .vertical ? position * stride : 0))
+                item.position = position
+                f.pager.transformer!.applyTransform(to: item)
+                return item
+            }
+            let fanCenter = value(.fan, 0), fanLeft = value(.fan, -1), fanRight = value(.fan, 1)
+            XCTAssertTrue(CATransform3DIsIdentity(fanCenter.transform3D))
+            XCTAssertEqual(fanLeft.transform.b, -fanRight.transform.b, accuracy: 0.0001)
+            XCTAssertGreaterThan(fanCenter.zIndex, fanRight.zIndex)
+            let incoming = value(.throwCard, 0.75), outgoing = value(.throwCard, -0.25)
+            let axis = direction == .horizontal ? incoming.center.x + incoming.transform.tx : incoming.center.y + incoming.transform.ty
+            XCTAssertEqual(axis, direction == .horizontal ? 160 : 90, accuracy: 0.0001)
+            XCTAssertGreaterThan(outgoing.zIndex, incoming.zIndex)
+            XCTAssertEqual(outgoing.alpha, 1)
+            XCTAssertNotEqual(outgoing.transform.b, 0)
+            XCTAssertEqual(value(.throwCard, -1).alpha, 0)
+            XCTAssertEqual(value(.bookFlip, -1).alpha, 0)
+        }
+    }
+
+    func testBookFlipKeepsItsHingeFixedThroughoutTheDrag() {
+        let f = makePager()
+        f.pager.itemSize = CGSize(width: 230, height: 150)
+        for direction in [TFYSwiftPagerView.ScrollDirection.horizontal, .vertical] {
+            f.pager.scrollDirection = direction
+            let transformer = TFYSwiftPagerViewTransformer(type: .bookFlip)
+            f.pager.transformer = transformer
+            for position: CGFloat in [-0.9, -0.5, -0.1, 0, 0.5, 1] {
+                let item = TFYSwiftPagerViewLayoutAttributes(forCellWith: IndexPath(item: 0, section: 0))
+                item.size = f.pager.itemSize
+                let stride = direction == .horizontal ? item.size.width : item.size.height
+                item.center = CGPoint(x: 160 + (direction == .horizontal ? position * stride : 0),
+                                      y: 90 + (direction == .vertical ? position * stride : 0))
+                item.position = position
+                transformer.applyTransform(to: item)
+                let hinge = CGPoint(x: direction == .horizontal ? -115 : 0, y: direction == .vertical ? -75 : 0)
+                let t = item.transform3D
+                let w = hinge.x * t.m14 + hinge.y * t.m24 + t.m44
+                let x = item.center.x + (hinge.x * t.m11 + hinge.y * t.m21 + t.m41) / w
+                let y = item.center.y + (hinge.x * t.m12 + hinge.y * t.m22 + t.m42) / w
+                XCTAssertEqual(x, 160 + hinge.x, accuracy: 0.001)
+                XCTAssertEqual(y, 90 + hinge.y, accuracy: 0.001)
+            }
+        }
+    }
+
     func testEveryBuiltInTransformerProducesFiniteLayoutAttributes() {
         let f = makePager()
-        XCTAssertEqual(PagerViewTransformerType.allCases.count, 22)
+        XCTAssertEqual(PagerViewTransformerType.allCases.count, 25)
         for type in PagerViewTransformerType.allCases {
             f.pager.transformer = TFYSwiftPagerViewTransformer(type: type)
             f.collection.layoutIfNeeded()

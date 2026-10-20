@@ -106,7 +106,7 @@ final class TFYSwiftBannerScrollUITests: XCTestCase {
         XCTAssertTrue(table.waitForExistence(timeout: 3))
         app.navigationBars.buttons["暂停预览"].tap()
         snapshot("gallery-initial")
-        let names = ["crossFading", "zoomOut", "depth", "overlap", "linear", "coverFlow", "ferrisWheel", "invertedFerrisWheel", "cubic", "rotate3D", "parallax", "springy", "flip", "cards", "cylinder", "wave", "windmill", "accordion", "carousel", "stack", "grid", "posterStack", "plain", "custom"]
+        let names = ["crossFading", "zoomOut", "depth", "overlap", "linear", "coverFlow", "ferrisWheel", "invertedFerrisWheel", "cubic", "rotate3D", "parallax", "springy", "flip", "cards", "cylinder", "wave", "windmill", "accordion", "carousel", "stack", "grid", "posterStack", "fan", "throwCard", "bookFlip", "plain", "custom"]
         for name in names {
             let preview = app.cells["gallery.\(name)"]
             for _ in 0..<12 {
@@ -117,16 +117,23 @@ final class TFYSwiftBannerScrollUITests: XCTestCase {
             }
             XCTAssertTrue(preview.exists, name)
             XCTAssertGreaterThan(preview.frame.intersection(app.frame).height, 230, name)
-            if name == "stack" {
-                let start = preview.coordinate(withNormalizedOffset: CGVector(dx: 0.75, dy: 0.5))
-                let end = preview.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5))
-                start.press(forDuration: 0.1, thenDragTo: end)
-                snapshot("stack-after-forward-drag")
-                end.press(forDuration: 0.1, thenDragTo: start)
-                snapshot("stack-after-reverse-drag")
-                XCTAssertTrue(table.exists)
+            // Keep the full card above the floating search field before inspecting or dragging it.
+            for _ in 0..<5 {
+                let top = app.navigationBars.firstMatch.frame.maxY + 8
+                if preview.frame.minY >= top && preview.frame.maxY <= app.frame.maxY - 110 { break }
+                let delta = min(max(preview.frame.minY - top, -300), 300)
+                let start = table.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.6))
+                start.press(forDuration: 0.02, thenDragTo: start.withOffset(CGVector(dx: 0, dy: -delta)))
             }
-            if name == "posterStack" || name == "crossFading" { snapshot("gallery-\(name)") }
+            snapshot("gallery-\(name)")
+            let start = preview.coordinate(withNormalizedOffset: CGVector(dx: 0.75, dy: 0.5))
+            let end = preview.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5))
+            start.press(forDuration: 0.1, thenDragTo: end)
+            snapshot("\(name)-after-forward-drag")
+            end.press(forDuration: 0.1, thenDragTo: start)
+            snapshot("\(name)-after-reverse-drag")
+            XCTAssertTrue(table.exists)
+
         }
         let custom = app.buttons["details.custom"]
         for _ in 0..<4 {
@@ -136,7 +143,7 @@ final class TFYSwiftBannerScrollUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["style.current"].waitForExistence(timeout: 3))
         XCTAssertTrue(app.staticTexts["style.current"].label.contains("自定义倾斜"))
         app.buttons["上一种卡片"].tap()
-        XCTAssertTrue(app.staticTexts["style.current"].label.contains("海报层叠"))
+        XCTAssertTrue(app.staticTexts["style.current"].label.contains("翻书"))
         app.buttons["下一种卡片"].tap()
         XCTAssertTrue(app.staticTexts["style.current"].label.contains("自定义倾斜"))
     }

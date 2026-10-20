@@ -31,6 +31,9 @@ public enum PagerViewTransformerType: Int, CaseIterable {
     case stack             // 卡片堆叠效果
     case grid              // 网格布局效果
     case posterStack       // 居中海报与两侧倾斜层叠（仅水平）
+    case fan               // 扇形卡片
+    case throwCard         // 飞出叠牌
+    case bookFlip          // 沿书脊翻页
     
     /// 是否支持垂直滚动方向。
     public var supportsVertical: Bool {
@@ -66,6 +69,9 @@ public enum PagerViewTransformerType: Int, CaseIterable {
         case .stack: return "堆叠"
         case .grid: return "网格"
         case .posterStack: return "海报层叠"
+        case .fan: return "扇形卡片"
+        case .throwCard: return "飞出叠牌"
+        case .bookFlip: return "翻书"
         }
     }
 }
@@ -190,6 +196,15 @@ open class TFYSwiftPagerViewTransformer: NSObject {
             self.minimumScale = 0.9
             self.minimumAlpha = 0.55
             self.rotationAngle = .pi / 24
+        case .fan:
+            self.minimumScale = 0.9
+            self.minimumAlpha = 0.75
+            self.rotationAngle = .pi / 12
+        case .throwCard:
+            self.minimumScale = 0.88
+            self.minimumAlpha = 1
+            self.rotationAngle = .pi / 12
+            self.cardSpacing = 12
         default:
             break
         }
@@ -553,6 +568,52 @@ open class TFYSwiftPagerViewTransformer: NSObject {
             let visibility = max(0, 1 - max(distance - 1, 0) * 2)
             attributes.alpha = (1 - (1 - self.minimumAlpha) * progress) * visibility
             attributes.zIndex = Int((1 - min(distance, 10)) * 100)
+        case .fan:
+            let angle = position * rotationAngle * (scrollDirection == .horizontal ? 1 : -1)
+            let pivotX = scrollDirection == .vertical ? attributes.bounds.width * 0.5 : 0
+            let pivotY = scrollDirection == .horizontal ? attributes.bounds.height * 0.5 : 0
+            let scale = 1 - (1 - minimumScale) * min(distance, 1)
+            attributes.transform = CGAffineTransform(translationX: pivotX, y: pivotY)
+                .rotated(by: angle).translatedBy(x: -pivotX, y: -pivotY).scaledBy(x: scale, y: scale)
+            attributes.alpha = 1 - (1 - minimumAlpha) * min(distance, 1)
+        case .throwCard:
+            if position < 0 {
+                let drift = cardSpacing * distance
+                attributes.transform = CGAffineTransform(translationX: scrollDirection == .vertical ? drift : 0,
+                                                         y: scrollDirection == .horizontal ? drift : 0)
+                    .rotated(by: position * rotationAngle)
+                attributes.alpha = max(0, min(1, (1 - distance) * 5))
+                attributes.zIndex = 100_000 + Int((1 - min(distance, 1)) * 1_000)
+            } else {
+                let scale = max(minimumScale, 1 - (1 - minimumScale) * position)
+                let x = scrollDirection == .horizontal ? -itemSpacing * position : cardSpacing * position
+                let y = scrollDirection == .vertical ? -itemSpacing * position : cardSpacing * position
+                attributes.transform = CGAffineTransform(translationX: x, y: y).scaledBy(x: scale, y: scale)
+                attributes.alpha = (1 - (1 - minimumAlpha) * min(position, 1)) * max(0, min(1, 2 - position))
+                attributes.zIndex = 90_000 - Int(position * 1_000)
+            }
+        case .bookFlip:
+            var transform = CATransform3DIdentity
+            transform.m34 = perspective
+            if position < 0 {
+                let angle = min(distance, 1) * min(abs(rotationAngle), .pi / 2)
+                let pivotX = scrollDirection == .horizontal ? -attributes.bounds.width * 0.5 : 0
+                let pivotY = scrollDirection == .vertical ? -attributes.bounds.height * 0.5 : 0
+                transform = CATransform3DTranslate(transform, pivotX, pivotY, 0)
+                transform = CATransform3DRotate(transform, scrollDirection == .horizontal ? angle : -angle,
+                                                scrollDirection == .horizontal ? 0 : 1,
+                                                scrollDirection == .horizontal ? 1 : 0, 0)
+                transform = CATransform3DTranslate(transform, -pivotX, -pivotY, 0)
+                attributes.alpha = max(0, min(1, (1 - distance) * 5))
+                attributes.zIndex = 100_000 + Int((1 - min(distance, 1)) * 1_000)
+            } else {
+                attributes.alpha = (1 - (1 - minimumAlpha) * min(position, 1)) * max(0, min(1, 2 - position))
+                attributes.zIndex = 90_000 - Int(position * 1_000)
+            }
+            let compensation = scrollDirection == .horizontal
+                ? CATransform3DMakeTranslation(-itemSpacing * position, 0, 0)
+                : CATransform3DMakeTranslation(0, -itemSpacing * position, 0)
+            attributes.transform3D = CATransform3DConcat(transform, compensation)
         case .grid:  // 网格布局效果
             // 网格模式下不需要特殊的变换效果
             attributes.alpha = 1.0
@@ -642,7 +703,11 @@ open class TFYSwiftPagerViewTransformer: NSObject {
                 -size.height * 0.8
         case .posterStack:
             guard scrollDirection == .horizontal else { return 0 }
-            return -size.width * 0.72 + max(self.cardSpacing, 0)
+            return -size.width * 0.72 + self.cardSpacing
+        case .fan:
+            return -(scrollDirection == .horizontal ? size.width : size.height) * 0.65 + self.cardSpacing
+        case .throwCard, .bookFlip:
+            return 0
         case .grid:
             return scrollDirection == .horizontal ?
                 (size.width + gridSpacing) / CGFloat(gridColumns) :

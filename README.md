@@ -1,11 +1,11 @@
 # TFYSwiftBannerScrollKit
 
-原生 UIKit 轮播组件：水平 / 垂直、有限 / 无限轮播、自动翻页、22 种转场、自定义 Cell、网格分页和页面指示器。无第三方依赖。
+原生 UIKit 轮播组件：水平 / 垂直、有限 / 无限轮播、自动翻页、25 种转场、自定义 Cell、网格分页和页面指示器。无第三方依赖。
 
 - 最低 **iOS 16.0**
 - Swift 5.7+ / Xcode 14+，使用 Swift 5 语言模式
 - Swift Package Manager、CocoaPods、源码集成
-- 当前版本 **3.1.0**（3.x 最低支持 iOS 16，升级前请检查宿主部署版本）
+- 当前版本 **3.2.0**（3.x 最低支持 iOS 16，升级前请检查宿主部署版本）
 
 ## 安装
 
@@ -19,7 +19,7 @@ Xcode → File → Add Package Dependencies，填入仓库地址：
 https://github.com/13662049573/TFYSwiftBannerScroll.git
 ```
 
-发布 `3.1.0` tag 后，选择 **Up to Next Major Version / 3.1.0**，添加产品 **TFYSwiftBannerScrollKit**。
+发布 `3.2.0` tag 后，选择 **Up to Next Major Version / 3.2.0**，添加产品 **TFYSwiftBannerScrollKit**。
 当前工作区可直接通过 **Add Local** 选择仓库目录验证。Swift Package 的版本由 Git tag 管理，`Package.swift` 声明产品、平台和 Swift 语言模式；本地 tag 需要推送后才能用于远程版本解析。
 
 其他 Package 的清单示例：
@@ -32,7 +32,7 @@ let package = Package(
     name: "MyAppFeature",
     platforms: [.iOS(.v16)],
     dependencies: [
-        .package(url: "https://github.com/13662049573/TFYSwiftBannerScroll.git", from: "3.1.0")
+        .package(url: "https://github.com/13662049573/TFYSwiftBannerScroll.git", from: "3.2.0")
     ],
     targets: [
         .target(name: "MyAppFeature", dependencies: [
@@ -48,7 +48,7 @@ let package = Package(
 
 ```ruby
 platform :ios, '16.0'
-pod 'TFYSwiftBannerScrollKit', '~> 3.1.0'
+pod 'TFYSwiftBannerScrollKit', '~> 3.2.0'
 ```
 
 ### 手动集成
@@ -124,13 +124,13 @@ final class BannerController: UIViewController, TFYSwiftPagerViewDataSource, TFY
 
 | 场景 | 可操作内容 |
 | --- | --- |
-| 全部卡片类型 | 22 种内置类型逐项独立预览，外加默认轮播和自定义倾斜；可搜索与直达调参页 |
+| 全部卡片类型 | 25 种内置类型逐项独立预览，外加默认轮播和自定义倾斜，共 27 项；可搜索与直达调参页 |
 | 海报层叠 | 大圆角海报、两侧缩小倾斜、后景变暗、独立播放按钮、分页点与参数调节 |
 | 基础轮播 | 自动 / 自定尺寸、宽高比例、间距、动画跳转、空 / 单 / 多项重载 |
 | 无限循环与自动轮播 | 无限开关、单项循环移除、间隔、暂停恢复、离窗重挂载 |
 | 滚动物理 | 双向滚动、分页、滚动和手势开关、双向回弹、减速距离、手势状态 |
 | 外观与编程控制 | 四边边距、背景、选择取消、定位、Cell / 索引查询、KVO |
-| 转场动画实验室 | 无转场、全部 22 种内置样式、自定义扩展、全部 17 个可调参数、布局属性检查 |
+| 转场动画实验室 | 无转场、全部 25 种内置样式、自定义扩展、全部 17 个可调参数、布局属性检查 |
 | 垂直滚动 | 支持垂直的全部类型、自动翻页、垂直回弹、间距 |
 | 网格分页 | 行列间距、双向分页、按项定位、自动按页轮播、进出网格、空数据 |
 | 页面指示器 | 双状态颜色 / 描边 / 透明度、路径 / 图片、所有对齐方式、边距、单页隐藏 |
@@ -193,18 +193,18 @@ final class BannerController: UIViewController, TFYSwiftPagerViewDataSource, TFY
 
 | 公共接口 | 展示入口 |
 | --- | --- |
-| `PagerViewTransformerType` 全部 22 个 case、`allCases`、`displayName` | 全部卡片类型独立预览、实验室完整选择与前后切换，无转场 + 22 种内置 + 自定义 |
+| `PagerViewTransformerType` 全部 25 个 case、`allCases`、`displayName` | 全部卡片类型独立预览、实验室完整选择与前后切换，无转场 + 25 种内置 + 自定义 |
 | `supportsVertical` | 垂直页过滤；动画实验室自动禁用不兼容方向 |
 | `type`、`pagerView` | 「读取 Transformer 和 LayoutAttributes」显示当前类型和所属 Pager |
 | `init(type:)` | 每次选择样式创建对应实例 |
-| `minimumScale`、`minimumAlpha` | zoomOut / overlap / linear / posterStack 等相关样式滑块；custom 同时展示 |
-| `perspective`、`rotationAngle` | rotate3D / posterStack；flip / cylinder / carousel 也提供透视滑块 |
+| `minimumScale`、`minimumAlpha` | zoomOut / overlap / linear / posterStack / fan / throwCard 等；cards / wave 提供缩放参数，custom 同时展示 |
+| `perspective`、`rotationAngle` | rotate3D / posterStack / fan / throwCard / bookFlip；coverFlow / cubic / flip / cylinder / carousel 也提供透视滑块 |
 | `parallaxFactor` | parallax |
 | `springDamping` | springy |
 | `waveHeight` | wave |
 | `cylinderRadius` | cylinder |
 | `flipAngle` | flip |
-| `cardSpacing` | cards / posterStack |
+| `cardSpacing` | cards / posterStack / fan / throwCard |
 | `windmillSpeed` | windmill |
 | `accordionFactor` | accordion |
 | `carouselRadius` | carousel |
@@ -213,7 +213,7 @@ final class BannerController: UIViewController, TFYSwiftPagerViewDataSource, TFY
 | `applyTransform(to:)` | 每种真实转场调用；DemoTiltTransformer 覆盖并可调缩放、透明度、倾角 |
 | `proposedInteritemSpacing()` | 属性检查显示实际间距；DemoTiltTransformer 覆盖并使用 Pager 间距 |
 
-自动化应用宿主测试遍历 24 个选项，检查全部 17 个参数均有实际滑块；这不替代每个动画的真机视觉验收。
+自动化应用宿主测试遍历 27 个选项，检查全部 17 个参数均有实际滑块；这不替代每个动画的真机视觉验收。
 
 ### TFYSwiftPagerViewLayoutAttributes
 
@@ -266,7 +266,7 @@ final class BannerController: UIViewController, TFYSwiftPagerViewDataSource, TFY
 
 ### 转场与自定义扩展
 
-`PagerViewTransformerType.allCases` 列举全部 22 种类型；`displayName` 提供名称，`supportsVertical` 指示方向兼容性。
+`PagerViewTransformerType.allCases` 列举全部 25 种类型；`displayName` 提供名称，`supportsVertical` 指示方向兼容性。
 仅水平：`overlap`、`linear`、`coverFlow`、`ferrisWheel`、`invertedFerrisWheel`、`posterStack`。
 
 ```swift
@@ -277,7 +277,57 @@ pager.transformer = transformer
 ```
 
 继承 `TFYSwiftPagerViewTransformer`，覆盖 `applyTransform(to:)` 与 `proposedInteritemSpacing()` 可实现自定义样式。参考 Demo 的 `DemoTiltTransformer`。
-修改自定义转场参数后可调用 `reloadData()` 刷新；`minimumScale`、`minimumAlpha` 和网格参数会自行使布局失效。
+内置的 17 个参数修改后会自动使布局失效，不必调用 `reloadData()`。自定义子类新增参数仍由宿主触发布局刷新。
+
+先设置 `pager.transformer`，再使用 `pager.parallaxFactor` / `pager.rotationAngle` 快捷接口；这两个接口读取当前 Transformer 的实际值。
+
+### 全部转场类型
+
+原有 `0...21` 的枚举原始值保持不变，新增类型追加到末尾。除标记「仅水平」的 6 种类型，其余支持水平和垂直。下表中的检查范围包括默认参数、滑动中间位置、边界值与方向；不能替代目标真机视觉与性能验收。
+
+| rawValue | 类型 | 视觉行为 / 主要参数 |
+| ---: | --- | --- |
+| 0 | `crossFading` 渐变淡出 | 固定中心叠化 |
+| 1 | `zoomOut` 缩小 | 缩放淡出；minimumScale / minimumAlpha |
+| 2 | `depth` 深度 | 前景滑出、后景缩放；minimumScale |
+| 3 | `overlap` 卡片重叠 · 仅水平 | 密集重叠；minimumScale / minimumAlpha |
+| 4 | `linear` 卡片线性 · 仅水平 | 较宽间距缩放；minimumScale / minimumAlpha |
+| 5 | `coverFlow` 封面流 · 仅水平 | 两侧透视倾斜；perspective |
+| 6 | `ferrisWheel` 摩天轮 · 仅水平 | 沿下方圆心旋转；minimumAlpha |
+| 7 | `invertedFerrisWheel` 反向摩天轮 · 仅水平 | 沿上方圆心旋转；minimumAlpha |
+| 8 | `cubic` 立体立方 | 沿边缘转动；perspective |
+| 9 | `rotate3D` 3D 旋转 | 围绕中心旋转；rotationAngle / perspective |
+| 10 | `parallax` 视差滚动 | 卡片位移差；parallaxFactor（不是图片内部视差） |
+| 11 | `springy` 弹性 | 有界弹性缩放；springDamping，越大超调越小 |
+| 12 | `flip` 翻转 | 中心翻面、隐藏背面镜像；flipAngle / perspective |
+| 13 | `cards` 卡片层叠 | 缩放与间距；minimumScale / cardSpacing |
+| 14 | `cylinder` 圆柱体 | 沿柱面移动并旋转；cylinderRadius / perspective |
+| 15 | `wave` 波浪 | 在滚动的垂直方向起伏；waveHeight / minimumScale |
+| 16 | `windmill` 风车 | 围绕卡片中心平面旋转；windmillSpeed |
+| 17 | `accordion` 手风琴 | 沿滚动轴压缩；accordionFactor |
+| 18 | `carousel` 旋转木马 | 卡片保持朝前沿弧线移动；carouselRadius / perspective |
+| 19 | `stack` 堆叠 | 前景不透明、近邻缩放错位；stackOffset |
+| 20 | `grid` 网格 | 有限整页排列；gridRows / gridColumns / gridSpacing |
+| 21 | `posterStack` 海报层叠 · 仅水平 | 中央海报、两侧倾斜；minimumScale / minimumAlpha / rotationAngle / cardSpacing |
+| 22 | `fan` 扇形卡片 | 绕底边（垂直时右边）展开；rotationAngle / minimumScale / minimumAlpha / cardSpacing |
+| 23 | `throwCard` 飞出叠牌 | 前卡飞出，下一张在底部放大接替；rotationAngle / minimumScale / minimumAlpha / cardSpacing |
+| 24 | `bookFlip` 翻书 | 书脊固定，前页沿左边（垂直时上边）翻起；rotationAngle / minimumAlpha / perspective |
+
+### 参数边界
+
+- `minimumScale`、`minimumAlpha`、`springDamping`、`accordionFactor` 限制在 `0...1`。
+- `parallaxFactor`、圆柱 / 木马半径、`cardSpacing`、`stackOffset` 和网格间距不小于 0；网格行列至少为 1。
+- 浮点参数拒绝 NaN / 无穷值并归一化；角度、透视、波高及风车速度保留有限值。极端透视或超大角度不保证视觉效果，建议使用 Demo 给出的范围。
+- 内置变换不会修改布局源中心；非有限 position 隐藏，远处卡片限制可见范围，避免负缩放和重复堆叠。自定义子类仍需自行处理边界。
+
+新增样式直接使用相同 API：
+
+```swift
+pager.transformer = TFYSwiftPagerViewTransformer(type: .fan) // 或 .throwCard / .bookFlip
+pager.itemSize = CGSize(width: 280, height: 200)
+pager.isInfinite = true
+pager.transformer?.rotationAngle = .pi / 12
+```
 
 ### 网格
 
@@ -312,9 +362,18 @@ pager.transformer = poster
 
 ## 优点与限制
 
-优点：无依赖、UIKit 原生、可复用 Cell、按可见区域计算布局、弱引用代理与计时器回调、22 种样式及公开扩展点；Package 与 Pod 使用同一份核心源码。
+优点：无依赖、UIKit 原生、可复用 Cell、按可见区域计算布局、弱引用代理与计时器回调、25 种样式及公开扩展点；Package 与 Pod 使用同一份核心源码。
 
 限制：只发布 iOS UIKit 产品；SwiftUI 需要宿主包装 `UIViewRepresentable`。不包含图片下载 / 缓存、SwiftUI 原生接口或点击式页面指示器。部分转场仅水平；网格不提供无限循环。复杂 3D 动画仍需在目标真机评估视觉与性能。
+
+## 3.2.0 更新
+
+- 补充 `fan` 扇形卡片、`throwCard` 飞出叠牌、`bookFlip` 翻书，内置类型增至 25 种；原有枚举值不变。
+- 总览增至 27 项，实验室、垂直列表和参数面板同步覆盖新增样式。
+- 全部 17 个 Transformer 参数支持自动刷新，规范非有限输入和有效范围；快捷属性读取当前 Transformer 的实际值。
+- 修复重叠卡片漏显示、重复位移、远处负缩放 / 透明度、摩天轮透明度跳变、翻转背面镜像和木马中心后缩。
+- 立方体变换保留布局源中心，可重复应用；封面流和立方体使用公开透视参数。
+- 统一梳理全部类型、方向、参数与验证边界；最低 iOS 16，无新增依赖。
 
 ## 3.1.0 更新
 
@@ -348,7 +407,7 @@ pager.transformer = poster
 
 ## 验证与发布
 
-核心库和 Demo 使用同一份源码；Package 测试目标覆盖核心行为，应用宿主测试补充 Demo 参数、注册和布局；UI 测试覆盖目录导航、24 项总览、海报播放按钮及手动拖动。测试结果与运行环境应分别记录，编译通过不能代替真机视觉验收。
+核心库和 Demo 使用同一份源码；Package 测试目标覆盖核心行为，应用宿主测试补充 Demo 参数、注册和布局；UI 测试覆盖目录导航、27 项总览、海报播放按钮及手动拖动。测试结果与运行环境应分别记录，编译通过不能代替真机视觉验收。
 
 当前真机验证受到签名限制：现有描述文件未包含连接的 iPad，尚未完成安装和交互验收。iOS 16 真机运行、复杂转场性能仍待验证。
 
