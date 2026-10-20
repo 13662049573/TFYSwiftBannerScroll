@@ -544,6 +544,55 @@ final class TFYSwiftBannerScrollTests: XCTestCase {
     }
 
     #if !SWIFT_PACKAGE
+    func testMenuHeaderSurvivesZeroHeightMeasurementAndRefitsAcrossWidths() {
+        let scene = DemoMenuViewController()
+        scene.loadViewIfNeeded()
+        scene.view.frame = .zero
+        scene.view.setNeedsLayout()
+        scene.view.layoutIfNeeded()
+        XCTAssertNil(scene.tableView.tableHeaderView, "Do not measure or attach a header with zero-width bounds")
+        let parent = UIViewController()
+        parent.addChild(scene)
+        parent.view.addSubview(scene.view)
+        scene.didMove(toParent: parent)
+        parent.view.frame = CGRect(x: 0, y: 0, width: 390, height: 844)
+        defer {
+            scene.willMove(toParent: nil)
+            scene.view.removeFromSuperview()
+            scene.removeFromParent()
+        }
+        scene.view.frame = parent.view.bounds
+        scene.view.setNeedsLayout()
+        scene.view.layoutIfNeeded()
+        let header = scene.tableView.tableHeaderView!
+        XCTAssertGreaterThan(header.frame.height, 32, "The header must be sized before attachment")
+        let zeroHeight = header.heightAnchor.constraint(equalToConstant: 0)
+        zeroHeight.identifier = "Test.TableHeader.TransientZeroHeight"
+        zeroHeight.isActive = true
+        header.layoutIfNeeded()
+        XCTAssertFalse(header.hasAmbiguousLayout)
+        zeroHeight.isActive = false
+
+        for category in [UIContentSizeCategory.large, .accessibilityExtraExtraExtraLarge] {
+            parent.setOverrideTraitCollection(UITraitCollection(preferredContentSizeCategory: category), forChild: scene)
+            for width: CGFloat in [320, 844, 1024, 390] {
+                scene.view.frame = CGRect(x: 0, y: 0, width: width, height: 844)
+                scene.view.setNeedsLayout()
+                scene.view.layoutIfNeeded()
+                header.layoutIfNeeded()
+                XCTAssertEqual(header.frame.width, width, accuracy: 1)
+                let stack = header.subviews.compactMap { $0 as? UIStackView }.first!
+                XCTAssertGreaterThanOrEqual(stack.frame.minY, 16)
+                XCTAssertLessThanOrEqual(stack.frame.maxY, header.bounds.height - 15)
+                for case let label as UILabel in stack.arrangedSubviews {
+                    XCTAssertFalse(label.hasAmbiguousLayout)
+                    let required = label.sizeThatFits(CGSize(width: label.bounds.width, height: .greatestFiniteMagnitude))
+                    XCTAssertGreaterThanOrEqual(label.bounds.height + 1, required.height, "Header text must remain visible")
+                }
+            }
+        }
+    }
+
     func testDemoExposesEveryTransformerParameterAndCustomExtension() {
         let scene = TransformersDemoViewController()
         let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 844))

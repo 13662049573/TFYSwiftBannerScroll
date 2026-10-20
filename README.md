@@ -352,6 +352,13 @@ pager.transformer = poster
 
 当前真机验证受到签名限制：现有描述文件未包含连接的 iPad，尚未完成安装和交互验收。iOS 16 真机运行、复杂转场性能仍待验证。
 
+### 2026-10-20 首页约束修复
+
+- #1 / `Class/DemoMenuViewController.swift:83`、`:101`：首页头部延后到表格宽度大于左右边距总和时测量，计算好高度后再赋值；底部约束优先级为 999，兼容表格临时零高度测量。旋转时同时检查宽度与高度，避免旧尺寸残留。
+- 验证：北京时间 21:51–21:53，本机 `tianfengyou`、无业务账号，iOS 27.0 模拟器。1 项布局回归（零宽、零高、4 种宽度及两档字体环境）与 2 项 UI 测试（10 场景导航、深色横屏）通过；测试夹具调整后重跑 1 项布局回归通过；iPad 模拟器启动截图与日志已检查。真机和 iOS 16 运行未测。
+- 原始证据目录 `/tmp/tfy-banner-header-20261020/`：`header-final.log`（103947 bytes）、`header-fixture.log`（42256 bytes）、对应 `.xcresult`、`ipad-launch.log`（681 bytes）、`ipad-header.png`，汇总 `verification.json`。三份运行日志中 `Unable to simultaneously satisfy constraints` 均为 0 条。
+- 剩余诊断：听写按钮、PointerUI 及 AX 类重复消息在模拟器日志中仍有出现，不能据此宣称控制台已清空。AX 重复类消息指向模拟器运行时的 `WebKit.axbundle` / `WebCore.axbundle`；XCTest capabilities 为测试会话输出。`NSMapGet ... NULL` 尚未定位到项目调用，保留为未归因信息，不将其标记为已修复。
+
 ### 2026-10-20 本轮维护记录
 
 时间窗口：北京时间 21:40–21:45；本机账号 `tianfengyou`，无业务登录账号。环境：Xcode 27.1 / SDK 27.1，iPhone 18 Pro Max 与 iPad Pro 13-inch (M5) 模拟器（iOS 27.0）。原始输出保存在本机 `/tmp/tfy-banner-20261020/`，系统清理临时目录后需重新运行。

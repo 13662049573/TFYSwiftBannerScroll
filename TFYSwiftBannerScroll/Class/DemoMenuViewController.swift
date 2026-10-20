@@ -31,6 +31,7 @@ final class DemoMenuViewController: UITableViewController, UISearchResultsUpdati
         ])
     ]
     private var query = ""
+    private var menuHeader: UIView?
     private var sections: [(String, [Item])] {
         guard !query.isEmpty else { return groups }
         return groups.compactMap { name, items in
@@ -58,7 +59,7 @@ final class DemoMenuViewController: UITableViewController, UISearchResultsUpdati
         search.searchBar.placeholder = "搜索功能、参数或交互"
         navigationItem.searchController = search
         definesPresentationContext = true
-        tableView.tableHeaderView = makeHeader()
+        menuHeader = makeHeader()
     }
 
     private func makeHeader() -> UIView {
@@ -79,21 +80,25 @@ final class DemoMenuViewController: UITableViewController, UISearchResultsUpdati
         stack.spacing = 8
         stack.translatesAutoresizingMaskIntoConstraints = false
         host.addSubview(stack)
+        // UITableView can temporarily impose a zero height while measuring its header.
+        let bottom = stack.bottomAnchor.constraint(equalTo: host.bottomAnchor, constant: -16)
+        bottom.priority = .init(999)
         NSLayoutConstraint.activate([
             stack.topAnchor.constraint(equalTo: host.topAnchor, constant: 16),
             stack.leadingAnchor.constraint(equalTo: host.leadingAnchor, constant: 20),
             stack.trailingAnchor.constraint(equalTo: host.trailingAnchor, constant: -20),
-            stack.bottomAnchor.constraint(equalTo: host.bottomAnchor, constant: -16)
+            bottom
         ])
         return host
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        guard let header = tableView.tableHeaderView else { return }
+        // Before the first layout, width can be zero. Measure and attach only with usable bounds.
+        guard let header = menuHeader, tableView.bounds.width > 40 else { return }
         let height = header.systemLayoutSizeFitting(CGSize(width: tableView.bounds.width, height: 0),
             withHorizontalFittingPriority: .required, verticalFittingPriority: .fittingSizeLevel).height
-        if abs(header.frame.height - height) > 1 {
+        if tableView.tableHeaderView !== header || abs(header.frame.height - height) > 1 || abs(header.frame.width - tableView.bounds.width) > 1 {
             header.frame.size = CGSize(width: tableView.bounds.width, height: height)
             tableView.tableHeaderView = header
         }
