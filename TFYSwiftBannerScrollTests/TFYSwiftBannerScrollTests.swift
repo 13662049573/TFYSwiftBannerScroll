@@ -135,6 +135,9 @@ final class TFYSwiftBannerScrollTests: XCTestCase {
         XCTAssertEqual(pager.transformer?.type, .grid)
         XCTAssertEqual(pager.transformer?.gridRows, 2)
         XCTAssertEqual(pager.transformer?.gridColumns, 3)
+        XCTAssertEqual(pager.transformer?.proposedInteritemSpacing(), 8)
+        pager.scrollDirection = .vertical
+        XCTAssertEqual(pager.transformer?.proposedInteritemSpacing(), 8)
         XCTAssertTrue(pager.isPagingEnabled)
     }
     func testDefaultLayoutContainsVisibleCells() {

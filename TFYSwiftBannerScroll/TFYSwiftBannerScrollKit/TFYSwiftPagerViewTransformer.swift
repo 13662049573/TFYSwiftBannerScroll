@@ -709,9 +709,7 @@ open class TFYSwiftPagerViewTransformer: NSObject {
         case .throwCard, .bookFlip:
             return 0
         case .grid:
-            return scrollDirection == .horizontal ?
-                (size.width + gridSpacing) / CGFloat(gridColumns) :
-                (size.height + gridSpacing) / CGFloat(gridRows)
+            return self.gridSpacing
         default:
             break
         }
