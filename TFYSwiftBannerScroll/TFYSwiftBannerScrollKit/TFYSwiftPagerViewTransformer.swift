@@ -594,13 +594,15 @@ open class TFYSwiftPagerViewTransformer: NSObject {
             }
         case .bookFlip:
             var transform = CATransform3DIdentity
-            transform.m34 = perspective
+            let pageLength = scrollDirection == .horizontal ? attributes.bounds.width : attributes.bounds.height
+            // Fold toward the viewer, while keeping the far edge in front of the camera plane.
+            transform.m34 = max(perspective, -0.9 / max(pageLength, 1))
             if position < 0 {
                 let angle = min(distance, 1) * min(abs(rotationAngle), .pi / 2)
                 let pivotX = scrollDirection == .horizontal ? -attributes.bounds.width * 0.5 : 0
                 let pivotY = scrollDirection == .vertical ? -attributes.bounds.height * 0.5 : 0
                 transform = CATransform3DTranslate(transform, pivotX, pivotY, 0)
-                transform = CATransform3DRotate(transform, scrollDirection == .horizontal ? angle : -angle,
+                transform = CATransform3DRotate(transform, scrollDirection == .horizontal ? -angle : angle,
                                                 scrollDirection == .horizontal ? 0 : 1,
                                                 scrollDirection == .horizontal ? 1 : 0, 0)
                 transform = CATransform3DTranslate(transform, -pivotX, -pivotY, 0)

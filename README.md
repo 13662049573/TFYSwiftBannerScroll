@@ -156,7 +156,7 @@ final class BannerController: UIViewController, TFYSwiftPagerViewDataSource, TFY
 | `bounces`、`alwaysBounceHorizontal`、`alwaysBounceVertical` | 滚动物理页独立开关，垂直页补充垂直回弹 |
 | `removesInfiniteLoopForSingleItem` | 自动轮播页开关 + 数据数量切到 1 项 |
 | `backgroundView` | 外观页显示 / 移除背景开关 |
-| `transformer`（含 nil） | 动画实验室样式选择；网格页进出切换 |
+| `transformer`（含 nil） | 动画实验室样式选择；网格页进出切换；每个 Pager 使用独立实例 |
 | `contentInsets` 四边 | 外观页上 / 左 / 下 / 右滑块 |
 | `isPagingEnabled` | 滚动物理页开关；网格实际开启 |
 | `parallaxFactor`、`rotationAngle` | 动画实验室视差 / 3D 旋转滑块调用 Pager 转发接口 |
@@ -283,7 +283,7 @@ pager.transformer = transformer
 
 ### 全部转场类型
 
-原有 `0...21` 的枚举原始值保持不变，新增类型追加到末尾。除标记「仅水平」的 6 种类型，其余支持水平和垂直。下表中的检查范围包括默认参数、滑动中间位置、边界值与方向；不能替代目标真机视觉与性能验收。
+原有 `0...21` 的枚举原始值保持不变，新增类型追加到末尾。宿主若穷举匹配该枚举，需要补齐新增 case 或提供兜底处理。除标记「仅水平」的 6 种类型，其余支持水平和垂直。下表中的检查范围包括默认参数、滑动中间位置、边界值与方向；不能替代目标真机视觉与性能验收。
 
 | rawValue | 类型 | 视觉行为 / 主要参数 |
 | ---: | --- | --- |
@@ -311,13 +311,13 @@ pager.transformer = transformer
 | 21 | `posterStack` 海报层叠 · 仅水平 | 中央海报、两侧倾斜；minimumScale / minimumAlpha / rotationAngle / cardSpacing |
 | 22 | `fan` 扇形卡片 | 绕底边（垂直时右边）展开；rotationAngle / minimumScale / minimumAlpha / cardSpacing |
 | 23 | `throwCard` 飞出叠牌 | 前卡飞出，下一张在底部放大接替；rotationAngle / minimumScale / minimumAlpha / cardSpacing |
-| 24 | `bookFlip` 翻书 | 书脊固定，前页沿左边（垂直时上边）翻起；rotationAngle / minimumAlpha / perspective |
+| 24 | `bookFlip` 翻书 | 书脊固定，前页沿左边（垂直时上边）朝前翻起；rotationAngle / minimumAlpha / perspective |
 
 ### 参数边界
 
 - `minimumScale`、`minimumAlpha`、`springDamping`、`accordionFactor` 限制在 `0...1`。
 - `parallaxFactor`、圆柱 / 木马半径、`cardSpacing`、`stackOffset` 和网格间距不小于 0；网格行列至少为 1。
-- 浮点参数拒绝 NaN / 无穷值并归一化；角度、透视、波高及风车速度保留有限值。极端透视或超大角度不保证视觉效果，建议使用 Demo 给出的范围。
+- 浮点参数拒绝 NaN / 无穷值并归一化；角度、透视、波高及风车速度保留有限值。翻书会按卡片尺寸限制透视，避免穿过镜头。其他极端透视或超大角度不保证视觉效果，建议使用 Demo 给出的范围。
 - 内置变换不会修改布局源中心；非有限 position 隐藏，远处卡片限制可见范围，避免负缩放和重复堆叠。自定义子类仍需自行处理边界。
 
 新增样式直接使用相同 API：
@@ -410,6 +410,24 @@ pager.transformer = poster
 核心库和 Demo 使用同一份源码；Package 测试目标覆盖核心行为，应用宿主测试补充 Demo 参数、注册和布局；UI 测试覆盖目录导航、27 项总览、海报播放按钮及手动拖动。测试结果与运行环境应分别记录，编译通过不能代替真机视觉验收。
 
 当前真机验证受到签名限制：现有描述文件未包含连接的 iPad，尚未完成安装和交互验收。iOS 16 真机运行、复杂转场性能仍待验证。
+
+### 2026-10-20 · 3.2.0 转场完整梳理与验证
+
+范围：现有 22 种类型逐项检查，补充 3 种，核心 API、方向、参数、可见布局、Demo 与版本同步。验证窗口：北京时间 21:58–22:27，本机 `tianfengyou`、无业务账号；Xcode 27.1 / SDK 27.1，iPhone 18 Pro Max 和 iPad Pro 13-inch (M5) 的 iOS 27.0 模拟器。原始证据保存在 `/tmp/tfy-banner-transformer-20261020/`，临时目录清理后需重新执行验证。
+
+| # / 要求 | 源码位置 | 提交 / 版本 | 场景与状态 | 证据 / 依据 |
+| --- | --- | --- | --- | --- |
+| 1 / 参数及时刷新与边界 | `TFYSwiftPagerViewTransformer.swift:84` | `316e44e` | 15 个浮点参数自动刷新 / 非有限值回归；网格行列在既有网格测试覆盖；通过 | 最终应用测试 48 项通过；`final-reviewed.log`（110197 bytes） |
+| 2 / 全类型中间态与布局 | `TFYSwiftPagerViewTransformer.swift:214`、`TFYSwiftPagerViewLayout.swift:154` | `f5e10cc` | 25 类型在支持方向的 1012 个有限 position 组合，检查数值、透明度、重复变换；部分可见卡片与非对称尾项；通过 | `final-reviewed.xcresult`；布局返回范围依据 [Apple 可见元素约定](https://developer.apple.com/documentation/uikit/uicollectionviewlayout/layoutattributesforelements(in:)) |
+| 3 / 快捷属性与网格间距一致 | `TFYSwiftPagerView.swift:212`、`TFYSwiftPagerViewTransformer.swift:714` | `826ceb9`、`43935a1` | 读取当前转场实际值、非有限快捷赋值、双向 gridSpacing；通过 | 应用及 Package 定向断言 |
+| 4 / 扇形、飞出叠牌、翻书与 Demo | `TFYSwiftPagerViewTransformer.swift:33`、`:571`；`Class/Scenes/DemoCardGalleryViewController.swift:17` | 3.2.0 | 旧 rawValue 不变；27 项独立预览和搜索；翻书书脊、前后页遮挡和大卡片镜头平面；通过 | 48 张支持方向的半程渲染截图位于 `reviewed-mid-screenshots/`；全部已检查 |
+| 5 / 实际交互和 UI | `TFYSwiftBannerScrollUITests.swift:100` | 3.2.0 | 最后完整 6 项 UI 测试通过：27 项逐项搜索 / 前后拖动 / 跳转，10 场景、深色横屏、网格、Nib / CTA、代理与海报按钮 | `ui-reviewed.log`（187198 bytes）、`ui-reviewed.xcresult` |
+| 6 / 独立 Package | `Package.swift:1` | 3.2.0 | 43 项执行，41 通过、2 跳过、0 失败；跳过项需要前台宿主，已由应用测试覆盖 | `package-reviewed.log`（74911 bytes）、对应 `.xcresult` |
+| 7 / CocoaPods 消费与 iOS 16 部署 | `TFYSwiftBannerScrollKit.podspec:5` | 3.2.0 | 本地 lib lint 和独立 Pod 消费 App 编译通过（允许警告）；无签名 Release 通过，Mach-O minos 16.0 | `pod-lint-reviewed.log`（1703 bytes）、`release-reviewed.log`（49230 bytes）、`deployment.txt` |
+| 8 / 版本与兼容说明 | `README.md:8`、`Info.plist:18` | 3.2.0 / build 6 | Package / Pod / Demo 平台与语言模式、25 类型、文档链接校验通过 | `version-validation.json`、`package.json`、`podspec.json` |
+| 9 / 真机、iOS 16 运行与远程发布 | — | 3.2.0 | 真机签名构建受阻：现有描述文件未包含连接的 iPad；真机交互、iOS 16 运行和性能未测；未推送 / 发布 | `device.log`（2283 bytes）；不将构建和模拟器结果标记为真机验收 |
+
+源码校验值及原始输出大小见 `verification.json`。本轮没有新增依赖、分支或远程写入。原有本地提交保留。CodeRabbit CLI 未安装（[官方安装入口](https://www.coderabbit.ai/cli)），代码图谱工具和指定跨项目记忆入口仍不可用；本轮为源码审查与运行验证，不是 CodeRabbit 审查结果。保留 CocoaPods 的 GitHub URL 校验、Metal 工具链搜索路径、AppIntents 与 XCTest 平台提示；不宣称零警告。
 
 ### 2026-10-20 首页约束修复
 

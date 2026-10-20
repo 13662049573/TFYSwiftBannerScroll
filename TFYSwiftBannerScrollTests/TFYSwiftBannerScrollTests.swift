@@ -715,11 +715,34 @@ final class TFYSwiftBannerScrollTests: XCTestCase {
                 transformer.applyTransform(to: item)
                 let hinge = CGPoint(x: direction == .horizontal ? -115 : 0, y: direction == .vertical ? -75 : 0)
                 let t = item.transform3D
+                if position < 0 { XCTAssertGreaterThan(t.m43, 0, "The turning page must remain in front of the next page") }
                 let w = hinge.x * t.m14 + hinge.y * t.m24 + t.m44
                 let x = item.center.x + (hinge.x * t.m11 + hinge.y * t.m21 + t.m41) / w
                 let y = item.center.y + (hinge.x * t.m12 + hinge.y * t.m22 + t.m42) / w
                 XCTAssertEqual(x, 160 + hinge.x, accuracy: 0.001)
                 XCTAssertEqual(y, 90 + hinge.y, accuracy: 0.001)
+            }
+        }
+    }
+
+    func testBookFlipLargePageStaysInFrontOfCameraPlane() {
+        let f = makePager()
+        let transformer = TFYSwiftPagerViewTransformer(type: .bookFlip)
+        f.pager.transformer = transformer
+        transformer.perspective = -0.01
+        for direction in [TFYSwiftPagerView.ScrollDirection.horizontal, .vertical] {
+            f.pager.scrollDirection = direction
+            for position: CGFloat in [-0.99, -0.75, -0.5, -0.25] {
+                let item = TFYSwiftPagerViewLayoutAttributes(forCellWith: IndexPath(item: 0, section: 0))
+                item.size = CGSize(width: 760, height: 760)
+                item.position = position
+                transformer.applyTransform(to: item)
+                let t = item.transform3D
+                for x: CGFloat in [-380, 380] {
+                    for y: CGFloat in [-380, 380] {
+                        XCTAssertGreaterThanOrEqual(x * t.m14 + y * t.m24 + t.m44, 0.099)
+                    }
+                }
             }
         }
     }
