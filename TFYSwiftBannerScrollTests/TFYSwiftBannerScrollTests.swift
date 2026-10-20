@@ -533,6 +533,115 @@ final class TFYSwiftBannerScrollTests: XCTestCase {
         XCTAssertEqual(transformer.stackOffset, 0)
     }
 
+    func testAllTransformersStayBoundedAndRepeatableDuringFractionalDrags() {
+        let f = makePager()
+        let positions: [CGFloat] = [-12, -5, -4.5, -3, -2.5, -2, -1.5, -1, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1, 1.5, 2, 2.5, 3, 4.5, 5, 12]
+        for type in PagerViewTransformerType.allCases {
+            let transformer = TFYSwiftPagerViewTransformer(type: type)
+            f.pager.transformer = transformer
+            for direction in [TFYSwiftPagerView.ScrollDirection.horizontal, .vertical] where direction == .horizontal || type.supportsVertical {
+                f.pager.scrollDirection = direction
+                for position in positions {
+                    let item = TFYSwiftPagerViewLayoutAttributes(forCellWith: IndexPath(item: 0, section: 0))
+                    item.size = CGSize(width: 230, height: 150)
+                    item.center = CGPoint(x: 160, y: 90)
+                    item.position = position
+                    transformer.applyTransform(to: item)
+                    let t = item.transform3D
+                    let values = [t.m11, t.m12, t.m13, t.m14, t.m21, t.m22, t.m23, t.m24, t.m31, t.m32, t.m33, t.m34, t.m41, t.m42, t.m43, t.m44]
+                    XCTAssertTrue(values.allSatisfy(\.isFinite), "\(type) at \(position)")
+                    XCTAssertTrue((0...1).contains(item.alpha), "\(type) at \(position)")
+                    XCTAssertEqual(item.center, CGPoint(x: 160, y: 90), "Transforming must not shift the layout's source center")
+                    let first = item.copy() as! TFYSwiftPagerViewLayoutAttributes
+                    transformer.applyTransform(to: item)
+                    XCTAssertTrue(first.isEqual(item), "Repeated transform drift: \(type) at \(position)")
+                    if CATransform3DIsAffine(t) && item.alpha > 0 {
+                        let affine = CATransform3DGetAffineTransform(t)
+                        XCTAssertGreaterThanOrEqual(affine.a * affine.d - affine.b * affine.c, -0.0001)
+                    }
+                }
+                for position in [CGFloat.nan, .infinity, -.infinity] {
+                    let item = TFYSwiftPagerViewLayoutAttributes(forCellWith: IndexPath(item: 0, section: 0))
+                    item.size = CGSize(width: 230, height: 150)
+                    item.position = position
+                    transformer.applyTransform(to: item)
+                    XCTAssertEqual(item.alpha, 0)
+                    XCTAssertTrue(CATransform3DIsIdentity(item.transform3D))
+                }
+            }
+        }
+    }
+
+    func testMotionUsesSingleAxisDisplacementAndHidesFlipBackfaces() {
+        let f = makePager()
+        for direction in [TFYSwiftPagerView.ScrollDirection.horizontal, .vertical] {
+            f.pager.scrollDirection = direction
+            for type in [PagerViewTransformerType.springy, .windmill, .accordion, .wave] {
+                let transformer = TFYSwiftPagerViewTransformer(type: type)
+                f.pager.transformer = transformer
+                let item = TFYSwiftPagerViewLayoutAttributes(forCellWith: IndexPath(item: 0, section: 0))
+                item.size = CGSize(width: 230, height: 150)
+                item.position = 0.5
+                transformer.applyTransform(to: item)
+                if direction == .horizontal { XCTAssertEqual(item.transform.tx, 0, accuracy: 0.0001) }
+                else { XCTAssertEqual(item.transform.ty, 0, accuracy: 0.0001) }
+                if type == .wave {
+                    let cross = direction == .horizontal ? item.transform.ty : item.transform.tx
+                    XCTAssertGreaterThan(abs(cross), 0)
+                }
+                if type == .springy { XCTAssertLessThanOrEqual(item.transform.a, 1.12) }
+            }
+            let flip = TFYSwiftPagerViewTransformer(type: .flip)
+            f.pager.transformer = flip
+            for position: CGFloat in [-1, -0.75, 0.75, 1] {
+                let item = TFYSwiftPagerViewLayoutAttributes(forCellWith: IndexPath(item: 0, section: 0))
+                item.size = CGSize(width: 230, height: 150)
+                item.position = position
+                flip.applyTransform(to: item)
+                XCTAssertEqual(item.alpha, 0)
+            }
+            let carousel = TFYSwiftPagerViewTransformer(type: .carousel)
+            f.pager.transformer = carousel
+            let center = TFYSwiftPagerViewLayoutAttributes(forCellWith: IndexPath(item: 0, section: 0))
+            center.size = CGSize(width: 230, height: 150)
+            carousel.applyTransform(to: center)
+            XCTAssertEqual(center.transform3D.m43, 0)
+            XCTAssertEqual(center.transform3D.m44, 1)
+        }
+    }
+
+    func testLayoutIncludesEveryVisibleTransformedNeighbourAndAsymmetricLastItem() {
+        for direction in [TFYSwiftPagerView.ScrollDirection.horizontal, .vertical] {
+            let f = makePager(count: 20, direction: direction)
+            f.pager.itemSize = CGSize(width: 230, height: 140)
+            f.pager.contentInsets = UIEdgeInsets(top: 4, left: 5, bottom: 60, right: 75)
+            for type in [PagerViewTransformerType?.none] + PagerViewTransformerType.allCases.filter { $0 != .grid && (direction == .horizontal || $0.supportsVertical) }.map(Optional.some) {
+                f.pager.transformer = type.map(TFYSwiftPagerViewTransformer.init(type:))
+                f.collection.layoutIfNeeded()
+                for item in [0, 8, 19] {
+                    f.pager.scrollToItem(at: item, animated: false)
+                    var offset = f.collection.contentOffset
+                    if item == 8 {
+                        if direction == .horizontal { offset.x += f.layout.itemSpacing * 0.35 }
+                        else { offset.y += f.layout.itemSpacing * 0.35 }
+                        f.collection.contentOffset = offset
+                    }
+                    f.collection.layoutIfNeeded()
+                    let rect = f.collection.bounds
+                    let returned = Set((f.layout.layoutAttributesForElements(in: rect) ?? []).map(\.indexPath))
+                    for index in 0..<20 {
+                        let path = IndexPath(item: index, section: 0)
+                        let expected = f.layout.layoutAttributesForItem(at: path)!
+                        if expected.alpha > 0 && expected.frame.intersects(rect) {
+                            XCTAssertTrue(returned.contains(path), "Missing visible \(index) for \(String(describing: type))")
+                        }
+                    }
+                    XCTAssertLessThan(returned.count, 20)
+                }
+            }
+        }
+    }
+
     func testEveryBuiltInTransformerProducesFiniteLayoutAttributes() {
         let f = makePager()
         XCTAssertEqual(PagerViewTransformerType.allCases.count, 22)

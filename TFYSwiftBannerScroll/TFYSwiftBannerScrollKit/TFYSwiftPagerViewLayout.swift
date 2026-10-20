@@ -149,24 +149,21 @@ class TFYSwiftPagerViewLayout: UICollectionViewLayout {
         guard !clippedRect.isEmpty else {
             return layoutAttributes
         }
-        let numberOfItemsBefore = self.scrollDirection == .horizontal
-            ? max(Int((clippedRect.minX - self.leadingSpacing) / self.itemSpacing), 0)
-            : max(Int((clippedRect.minY - self.leadingSpacing) / self.itemSpacing), 0)
-        let startPosition = self.leadingSpacing + CGFloat(numberOfItemsBefore) * self.itemSpacing
-        var itemIndex = numberOfItemsBefore
-        var origin = startPosition
-        let maxPosition = self.scrollDirection == .horizontal
-            ? min(clippedRect.maxX, self.contentSize.width - self.actualItemSize.width - self.leadingSpacing)
-            : min(clippedRect.maxY, self.contentSize.height - self.actualItemSize.height - self.leadingSpacing)
-        
-        while itemIndex < self.numberOfItems * self.numberOfSections,
-              origin - maxPosition <= max(CGFloat(100.0) * .ulpOfOne * abs(origin + maxPosition), .leastNonzeroMagnitude) {
-            guard self.numberOfItems > 0 else { break }
+        let axisSize = self.scrollDirection == .horizontal ? self.actualItemSize.width : self.actualItemSize.height
+        // Include partially visible leading cards and neighbours moved into view by a transformer.
+        let padding = pagerView.transformer == nil ? axisSize : max(axisSize, self.itemSpacing * 5)
+        let minimum = self.scrollDirection == .horizontal ? clippedRect.minX : clippedRect.minY
+        let maximum = self.scrollDirection == .horizontal ? clippedRect.maxX : clippedRect.maxY
+        let count = self.numberOfItems * self.numberOfSections
+        guard count > 0 else { return layoutAttributes }
+        let first = Int(max(0, min(CGFloat(count - 1), floor((minimum - self.leadingSpacing - padding) / self.itemSpacing))))
+        let last = Int(max(0, min(CGFloat(count - 1), ceil((maximum - self.leadingSpacing + padding) / self.itemSpacing))))
+        guard first <= last else { return layoutAttributes }
+        for itemIndex in first...last {
             let indexPath = IndexPath(item: itemIndex % self.numberOfItems, section: itemIndex / self.numberOfItems)
-            let attributes = self.layoutAttributesForItem(at: indexPath) as! TFYSwiftPagerViewLayoutAttributes
-            layoutAttributes.append(attributes)
-            itemIndex += 1
-            origin += self.itemSpacing
+            if let attributes = self.layoutAttributesForItem(at: indexPath), attributes.alpha > 0 {
+                layoutAttributes.append(attributes)
+            }
         }
         return layoutAttributes
     }

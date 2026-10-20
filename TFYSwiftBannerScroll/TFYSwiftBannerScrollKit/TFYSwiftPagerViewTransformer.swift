@@ -200,7 +200,15 @@ open class TFYSwiftPagerViewTransformer: NSObject {
         guard let pagerView = self.pagerView else {
             return
         }
+        attributes.transform3D = CATransform3DIdentity
+        attributes.alpha = 1
+        attributes.zIndex = 0
         let position = attributes.position
+        guard position.isFinite else { attributes.alpha = 0; return }
+        let distance = abs(position)
+        guard self.type == .grid || distance < 5 else { attributes.alpha = 0; return }
+        // Fine-grained, stable front-to-back ordering during fractional drags.
+        attributes.zIndex = Int((5 - min(distance, 5)) * 10_000) * 2 + (position <= 0 ? 1 : 0)
         let scrollDirection = pagerView.scrollDirection
         let itemSpacing = (scrollDirection == .horizontal ? attributes.bounds.width : attributes.bounds.height) + self.proposedInteritemSpacing()
         switch self.type {
@@ -309,10 +317,8 @@ open class TFYSwiftPagerViewTransformer: NSObject {
             let scale = max(1 - (1-self.minimumScale) * abs(position), self.minimumScale)
             let transform = CGAffineTransform(scaleX: scale, y: scale)
             attributes.transform = transform
-            let alpha = (self.minimumAlpha + (1-abs(position))*(1-self.minimumAlpha))
+            let alpha = 1 - (1 - self.minimumAlpha) * min(distance, 1)
             attributes.alpha = alpha
-            let zIndex = (1-abs(position)) * 10
-            attributes.zIndex = Int(zIndex)
         case .coverFlow:
             guard scrollDirection == .horizontal else {
                 // 此类型不支持垂直模式
@@ -322,10 +328,9 @@ open class TFYSwiftPagerViewTransformer: NSObject {
             let rotation = sin(position*(.pi)*0.5)*(.pi)*0.25*1.5
             let translationZ = -itemSpacing * 0.5 * abs(position)
             var transform3D = CATransform3DIdentity
-            transform3D.m34 = -0.002
+            transform3D.m34 = self.perspective
             transform3D = CATransform3DRotate(transform3D, rotation, 0, 1, 0)
             transform3D = CATransform3DTranslate(transform3D, 0, 0, translationZ)
-            attributes.zIndex = 100 - Int(abs(position))
             attributes.transform3D = transform3D
         case .ferrisWheel, .invertedFerrisWheel:
             guard scrollDirection == .horizontal else {
@@ -347,11 +352,11 @@ open class TFYSwiftPagerViewTransformer: NSObject {
                 transform = transform.translatedBy(x: -position*itemSpacing, y: ty)
                 transform = transform.rotated(by: rotation)
                 transform = transform.translatedBy(x: 0, y: -ty)
-                zIndex = Int((4.0-abs(position)*10))
+                zIndex = attributes.zIndex
             default:
                 break
             }
-            attributes.alpha = abs(position) < 0.5 ? 1 : self.minimumAlpha
+            attributes.alpha = (1 - (1 - self.minimumAlpha) * min(distance, 1)) * min(5 - distance, 1)
             attributes.transform = transform
             attributes.zIndex = zIndex
         case .cubic:
@@ -365,18 +370,18 @@ open class TFYSwiftPagerViewTransformer: NSObject {
                 let theta = position * .pi * 0.5 * (scrollDirection == .horizontal ? 1 : -1)
                 let radius = scrollDirection == .horizontal ? attributes.bounds.width : attributes.bounds.height
                 var transform3D = CATransform3DIdentity
-                transform3D.m34 = -0.002
+                transform3D.m34 = self.perspective
                 switch scrollDirection {
                 case .horizontal:
                     // ForwardX -> RotateY -> BackwardX
-                    attributes.center.x += direction*radius*0.5 // ForwardX
                     transform3D = CATransform3DRotate(transform3D, theta, 0, 1, 0) // RotateY
                     transform3D = CATransform3DTranslate(transform3D,-direction*radius*0.5, 0, 0) // BackwardX
+                    transform3D = CATransform3DConcat(transform3D, CATransform3DMakeTranslation(direction*radius*0.5, 0, 0))
                 case .vertical:
                     // ForwardY -> RotateX -> BackwardY
-                    attributes.center.y += direction*radius*0.5 // ForwardY
                     transform3D = CATransform3DRotate(transform3D, theta, 1, 0, 0) // RotateX
                     transform3D = CATransform3DTranslate(transform3D,0, -direction*radius*0.5, 0) // BackwardY
+                    transform3D = CATransform3DConcat(transform3D, CATransform3DMakeTranslation(0, direction*radius*0.5, 0))
                 }
                 attributes.transform3D = transform3D
             case 1 ... CGFloat.greatestFiniteMagnitude:
@@ -409,16 +414,11 @@ open class TFYSwiftPagerViewTransformer: NSObject {
            }
            attributes.transform = transform
             
-        case .springy:  // 新增弹性效果
-            let scale = 1 - min(abs(position) * 0.3, 0.3)
-            let translationX = scrollDirection == .horizontal ? itemSpacing * position : 0
-            let translationY = scrollDirection == .vertical ? itemSpacing * position : 0
-            let transform = CGAffineTransform(scaleX: scale, y: scale)
-                .translatedBy(x: translationX, y: translationY)
-                .scaledBy(x: 1 + springDamping * abs(position),
-                         y: 1 + springDamping * abs(position))
-            attributes.transform = transform
-            attributes.alpha = 1 - abs(position)/3
+        case .springy:  // 弹性缩放：阻尼越大，超调越小。
+            let progress = min(distance, 1)
+            let scale = 1 - 0.15 * progress + sin(progress * .pi) * 0.12 * (1 - springDamping)
+            attributes.transform = CGAffineTransform(scaleX: scale, y: scale)
+            attributes.alpha = 1 - min(distance / 3, 1)
         case .flip:  // 3D翻转效果
             var transform3D = CATransform3DIdentity
             transform3D.m34 = perspective
@@ -430,9 +430,10 @@ open class TFYSwiftPagerViewTransformer: NSObject {
                 transform3D = CATransform3DRotate(transform3D, angle, 1, 0, 0)
             }
             attributes.transform3D = transform3D
-            attributes.alpha = abs(position) <= 1 ? 1.0 : 0.0
+            // Hide the back face instead of displaying a mirrored image.
+            attributes.alpha = distance <= 1 ? max(0, cos(angle)) : 0
         case .cards:  // 卡片堆叠效果
-            let scale = 1 - abs(position) * 0.2
+            let scale = max(1 - distance * 0.2, self.minimumScale)
             let translation = cardSpacing * position
             var transform = CGAffineTransform.identity
                 .scaledBy(x: scale, y: scale)
@@ -445,7 +446,6 @@ open class TFYSwiftPagerViewTransformer: NSObject {
             }
             
             attributes.transform = transform
-            attributes.zIndex = Int(100 - abs(position * 10))
             attributes.alpha = 1 - abs(position) * 0.5
             
         case .cylinder:  // 圆柱体效果
@@ -468,44 +468,22 @@ open class TFYSwiftPagerViewTransformer: NSObject {
                 transform3D = CATransform3DRotate(transform3D, angle, 1, 0, 0)
             }
             
-            attributes.transform3D = transform3D
-            attributes.alpha = 1 - min(abs(position) * 0.5, 0.5)
+            let compensation = scrollDirection == .horizontal
+                ? CATransform3DMakeTranslation(-itemSpacing * position, 0, 0)
+                : CATransform3DMakeTranslation(0, -itemSpacing * position, 0)
+            attributes.transform3D = CATransform3DConcat(transform3D, compensation)
+            attributes.alpha = max(0, cos(angle))
             
-        case .wave:  // 波浪效果
-            var transform = CGAffineTransform.identity
-            let phase = position * .pi * 2
-            let y = waveHeight * sin(phase)
-            let scale = 1 - abs(position) * 0.2
-            
-            transform = transform
-                .translatedBy(x: 0, y: y)
-                .scaledBy(x: scale, y: scale)
-            
-            switch scrollDirection {
-            case .horizontal:
-                transform = transform.translatedBy(x: position * itemSpacing, y: 0)
-            case .vertical:
-                transform = transform.translatedBy(x: 0, y: position * itemSpacing)
-            }
-            
-            attributes.transform = transform
-            attributes.alpha = 1 - abs(position) * 0.3
-            attributes.zIndex = Int(100 - abs(position * 10))
+        case .wave:  // 波浪沿滚动的垂直方向起伏。
+            let displacement = waveHeight * sin(position * .pi * 0.5)
+            let scale = max(1 - distance * 0.2, self.minimumScale)
+            let x = scrollDirection == .vertical ? displacement : 0
+            let y = scrollDirection == .horizontal ? displacement : 0
+            attributes.transform = CGAffineTransform(translationX: x, y: y).scaledBy(x: scale, y: scale)
+            attributes.alpha = 1 - distance * 0.3
         case .windmill:  // 风车旋转效果
-            var transform = CGAffineTransform.identity
-            let angle = position * .pi * windmillSpeed
-            transform = transform.rotated(by: angle)
-            
-            switch scrollDirection {
-            case .horizontal:
-                transform = transform.translatedBy(x: position * itemSpacing, y: 0)
-            case .vertical:
-                transform = transform.translatedBy(x: 0, y: position * itemSpacing)
-            }
-            
-            attributes.transform = transform
-            attributes.alpha = 1 - min(abs(position) * 0.6, 0.6)
-            attributes.zIndex = Int(10 - abs(position))
+            attributes.transform = CGAffineTransform(rotationAngle: position * .pi * windmillSpeed)
+            attributes.alpha = 1 - min(distance * 0.6, 0.6)
         case .accordion:  // 手风琴折叠效果
             var transform = CGAffineTransform.identity
             let scale = max(1 - abs(position) * accordionFactor, 0.2)
@@ -513,10 +491,8 @@ open class TFYSwiftPagerViewTransformer: NSObject {
             switch scrollDirection {
             case .horizontal:
                 transform = transform.scaledBy(x: scale, y: 1.0)
-                transform = transform.translatedBy(x: position * itemSpacing, y: 0)
             case .vertical:
                 transform = transform.scaledBy(x: 1.0, y: scale)
-                transform = transform.translatedBy(x: 0, y: position * itemSpacing)
             }
             
             attributes.transform = transform
@@ -528,7 +504,7 @@ open class TFYSwiftPagerViewTransformer: NSObject {
             
             let angle = position * .pi / 3
             let radius = carouselRadius
-            let translateZ = -radius * cos(angle)
+            let translateZ = radius * (cos(angle) - 1)
             
             switch scrollDirection {
             case .horizontal:
@@ -539,9 +515,11 @@ open class TFYSwiftPagerViewTransformer: NSObject {
                 transform3D = CATransform3DTranslate(transform3D, 0, translateY, translateZ)
             }
             
-            attributes.transform3D = transform3D
-            attributes.alpha = 1 - min(abs(position) * 0.7, 0.7)
-            attributes.zIndex = Int(100 - abs(position * 20))
+            let compensation = scrollDirection == .horizontal
+                ? CATransform3DMakeTranslation(-itemSpacing * position, 0, 0)
+                : CATransform3DMakeTranslation(0, -itemSpacing * position, 0)
+            attributes.transform3D = CATransform3DConcat(transform3D, compensation)
+            attributes.alpha = 1 - min(distance * 0.7, 0.7)
             
         case .stack:  // 堆叠效果
             var transform = CGAffineTransform.identity
@@ -581,6 +559,10 @@ open class TFYSwiftPagerViewTransformer: NSObject {
             attributes.transform = .identity
             attributes.zIndex = 0
         }
+        if self.type != .grid && self.type != .ferrisWheel && self.type != .invertedFerrisWheel {
+            attributes.alpha *= max(0, min(1, 3 - distance))
+        }
+        attributes.alpha = attributes.alpha.isFinite ? min(max(attributes.alpha, 0), 1) : 0
     }
     
     //由变压器类提出的项间间隔。这将覆盖页导航视图提供的默认interitemSpacing。
