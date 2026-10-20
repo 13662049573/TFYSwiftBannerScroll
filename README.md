@@ -44,7 +44,7 @@ let package = Package(
 
 ### CocoaPods
 
-`3.2.0` 已登记到 CocoaPods Trunk，公开 Specs 与单个 CDN Podspec 已核验。CDN 版本索引同步状态见下方发布记录。
+`3.2.0` 已发布到 CocoaPods Trunk，公开 CDN 按版本安装和独立 App 编译验证通过。
 
 ```ruby
 platform :ios, '16.0'
@@ -422,11 +422,11 @@ pager.transformer = poster
 | 3 / 全类型实际交互 | `TFYSwiftBannerScrollUITests.swift:120` / `0a3b4c1` | 1 项 UI 测试通过：27 项逐项搜索、行高 / 按钮尺寸、正反拖动与详情跳转；海报截图已检查 | `final.log`（195244 bytes）、`screenshots/`；`runtime-final.log`（61320674 bytes），约束冲突 / 窗口外布局 / 未配对生命周期消息均为 0 |
 | 4 / 远程 Package 3.2.0 | `Package.swift:1` / `0bf160b` | 独立消费包按远端精确版本解析，43 项执行，41 通过、2 因缺少前台应用宿主而跳过、0 失败 | `Package.resolved` 固定 `0bf160b`；`package.log`（115585 bytes）、`package.xcresult` |
 | 5 / CocoaPods 公开发布 | `TFYSwiftBannerScrollKit.podspec:5` / `0bf160b` | 远程 Podspec lint 通过；Trunk 和公开 Specs 已出现 3.2.0，规范内容一致。发布命令返回 GitHub API 超时后先回查，未重复提交 | `spec-lint.log`（1626 bytes）、`trunk-push.log`（1566 bytes）、`trunk-spec.json`、`github-spec.json`、`cdn-follow.body` |
-| 6 / 公开 Podspec 消费 | 同上 | 独立 App 从公开 Specs Podspec 安装并编译通过，已安装的 7 个核心文件与标签一致；arm64 / x86_64 最低部署均为 iOS 16.0 | `published-spec-install.log`（830 bytes）、`pod-build.log`（354372 bytes）、`pod-deployment.txt`。此消费方式指定公开 Podspec，不能代替普通按版本解析 |
-| 7 / CocoaPods CDN 版本索引 | 公开 CDN | 暂未同步：普通 `= 3.2.0` 安装尚未解析成功；单个版本 Podspec 已可读取。保留为待复验项 | `pod-consumer-install.log`、`cdn-index-current.txt`、`cdn-index.headers` |
+| 6 / 公开 Podspec 消费 | 同上 | 独立 App 从公开 Specs Podspec 安装、编译并启动通过，已安装的 7 个核心文件与标签一致；arm64 / x86_64 最低部署均为 iOS 16.0 | `published-spec-install.log`（830 bytes）、`pod-build-final.log`（73513 bytes）、`pod-launch-final.log`、`pod-consumer-settled.png`、`pod-deployment.txt`。此消费方式指定公开 Podspec，不能代替普通按版本解析 |
+| 7 / CocoaPods CDN 标准安装 | 公开 CDN | 通过：缓存到期后版本索引已同步，标准 `= 3.2.0` 安装与独立 App 编译通过；Lock / Manifest 一致，无 `EXTERNAL SOURCES`，7 个核心源码校验一致 | `cdn-index-final.txt`、`pod-standard-install-final.log`（674 bytes）、`pod-standard-build.log`（363732 bytes）、`standard-Podfile.lock` |
 | 8 / 真机与剩余诊断 | — | 真机开发服务受锁屏阻挡，真机 / iOS 16 运行未测；保留图片解码、听写与 PointerUI 信息，不宣称控制台零警告 | `device.log`；最终运行日志仍有 7 条 `CVPixelBufferCreate`、30 条听写、2 条 PointerUI 信息 |
 
-验证时间：北京时间 05:19–05:29，本机 `tianfengyou`，无业务账号；Xcode 27.1 / SDK 27.1，iPhone 18 Pro Max 与 iPad Pro 13-inch (M5) 的 iOS 27.0 模拟器。布局证据目录 `/tmp/tfy-banner-gallery-layout-20261021/`，发布证据目录 `/tmp/tfy-banner-release-3.2.0-20261021/`；汇总及完整文件大小见各目录的 `verification.json`。本轮未增加依赖、分支，也未改动现有签名设置；保留 Metal 工具链搜索路径、AppIntents 与 XCTest 平台提示。
+验证时间：北京时间 05:19–05:40，本机 `tianfengyou`，无业务账号；Xcode 27.1 / SDK 27.1，iPhone 18 Pro Max 与 iPad Pro 13-inch (M5) 的 iOS 27.0 模拟器。布局证据目录 `/tmp/tfy-banner-gallery-layout-20261021/`，发布证据目录 `/tmp/tfy-banner-release-3.2.0-20261021/`；汇总及完整文件大小见各目录的 `verification.json`。本轮未增加依赖、分支，也未改动现有签名设置；保留 Metal 工具链搜索路径、AppIntents 与 XCTest 平台提示。
 
 ### 2026-10-20 · 3.2.0 转场完整梳理与验证
 
