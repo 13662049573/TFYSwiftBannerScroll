@@ -874,6 +874,41 @@ final class TFYSwiftBannerScrollTests: XCTestCase {
         }
     }
 
+    func testGalleryRendersEveryStyleHalfwayThroughBothSupportedDirections() {
+        let host = UIViewController()
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
+        window.rootViewController = host
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true; window.rootViewController = nil }
+        for style in DemoCardGalleryViewController.styles {
+            for vertical in [false, true] where !vertical || (style.type?.supportsVertical ?? true) {
+                let cell = DemoCardGalleryCell(style: .default, reuseIdentifier: "capture")
+                cell.frame = CGRect(x: 0, y: 0, width: 390, height: 460)
+                host.view.addSubview(cell)
+                cell.configure(style: style)
+                cell.pager.scrollDirection = vertical ? .vertical : .horizontal
+                cell.layoutIfNeeded()
+                cell.pager.layoutIfNeeded()
+                let collection = cell.pager.subviews.flatMap(\.subviews).compactMap { $0 as? UICollectionView }.first!
+                let layout = collection.collectionViewLayout as! TFYSwiftPagerViewLayout
+                var offset = collection.contentOffset
+                if vertical { offset.y += layout.itemSpacing * 0.5 }
+                else { offset.x += layout.itemSpacing * 0.5 }
+                collection.contentOffset = offset
+                collection.layoutIfNeeded()
+                let image = UIGraphicsImageRenderer(bounds: cell.bounds).image { _ in
+                    XCTAssertTrue(cell.drawHierarchy(in: cell.bounds, afterScreenUpdates: true))
+                }
+                let attachment = XCTAttachment(image: image)
+                attachment.name = "mid-\(style.name)-\(vertical ? "vertical" : "horizontal")"
+                attachment.lifetime = .keepAlways
+                add(attachment)
+                cell.prepareForReuse()
+                cell.removeFromSuperview()
+            }
+        }
+    }
+
     func testPosterDemoHasRoundedCellAndIndependentPlayCallback() {
         let scene = PosterStackDemoViewController()
         let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 844))

@@ -42,6 +42,7 @@ final class DemoCardGalleryViewController: UITableViewController, UISearchResult
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 310
         tableView.isPrefetchingEnabled = false
+        tableView.keyboardDismissMode = .onDrag
         let search = UISearchController(searchResultsController: nil)
         search.searchResultsUpdater = self
         search.obscuresBackgroundDuringPresentation = false

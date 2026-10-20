@@ -107,24 +107,16 @@ final class TFYSwiftBannerScrollUITests: XCTestCase {
         app.navigationBars.buttons["暂停预览"].tap()
         snapshot("gallery-initial")
         let names = ["crossFading", "zoomOut", "depth", "overlap", "linear", "coverFlow", "ferrisWheel", "invertedFerrisWheel", "cubic", "rotate3D", "parallax", "springy", "flip", "cards", "cylinder", "wave", "windmill", "accordion", "carousel", "stack", "grid", "posterStack", "fan", "throwCard", "bookFlip", "plain", "custom"]
+        let search = app.searchFields.firstMatch
         for name in names {
+            search.tap()
+            if let text = search.value as? String, text != search.placeholderValue {
+                search.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: text.count))
+            }
+            search.typeText(name + "\n")
+            table.swipeUp() // Dismiss the keyboard before inspecting or dragging the card.
             let preview = app.cells["gallery.\(name)"]
-            for _ in 0..<12 {
-                if preview.exists && preview.frame.intersection(app.frame).height > 230 { break }
-                let start = table.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.8))
-                let end = table.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.45))
-                start.press(forDuration: 0.02, thenDragTo: end)
-            }
-            XCTAssertTrue(preview.exists, name)
-            XCTAssertGreaterThan(preview.frame.intersection(app.frame).height, 230, name)
-            // Keep the full card above the floating search field before inspecting or dragging it.
-            for _ in 0..<5 {
-                let top = app.navigationBars.firstMatch.frame.maxY + 8
-                if preview.frame.minY >= top && preview.frame.maxY <= app.frame.maxY - 110 { break }
-                let delta = min(max(preview.frame.minY - top, -300), 300)
-                let start = table.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.6))
-                start.press(forDuration: 0.02, thenDragTo: start.withOffset(CGVector(dx: 0, dy: -delta)))
-            }
+            XCTAssertTrue(preview.waitForExistence(timeout: 3), name)
             snapshot("gallery-\(name)")
             let start = preview.coordinate(withNormalizedOffset: CGVector(dx: 0.75, dy: 0.5))
             let end = preview.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5))
@@ -133,7 +125,6 @@ final class TFYSwiftBannerScrollUITests: XCTestCase {
             end.press(forDuration: 0.1, thenDragTo: start)
             snapshot("\(name)-after-reverse-drag")
             XCTAssertTrue(table.exists)
-
         }
         let custom = app.buttons["details.custom"]
         for _ in 0..<4 {
