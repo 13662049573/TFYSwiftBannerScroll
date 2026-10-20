@@ -30,11 +30,12 @@ public enum PagerViewTransformerType: Int, CaseIterable {
     case carousel          // 旋转木马效果
     case stack             // 卡片堆叠效果
     case grid              // 网格布局效果
+    case posterStack       // 居中海报与两侧倾斜层叠（仅水平）
     
     /// 是否支持垂直滚动方向。
     public var supportsVertical: Bool {
         switch self {
-        case .overlap, .linear, .coverFlow, .ferrisWheel, .invertedFerrisWheel:
+        case .overlap, .linear, .coverFlow, .ferrisWheel, .invertedFerrisWheel, .posterStack:
             return false
         default:
             return true
@@ -64,6 +65,7 @@ public enum PagerViewTransformerType: Int, CaseIterable {
         case .carousel: return "旋转木马"
         case .stack: return "堆叠"
         case .grid: return "网格"
+        case .posterStack: return "海报层叠"
         }
     }
 }
@@ -124,6 +126,10 @@ open class TFYSwiftPagerViewTransformer: NSObject {
             self.minimumScale = 0.85
         case .depth:
             self.minimumScale = 0.5
+        case .posterStack:
+            self.minimumScale = 0.9
+            self.minimumAlpha = 0.55
+            self.rotationAngle = .pi / 24
         default:
             break
         }
@@ -498,6 +504,17 @@ open class TFYSwiftPagerViewTransformer: NSObject {
             attributes.alpha = max(0, min(1, 2 - distance))
             // Fractional positions need distinct layers, including a deterministic tie at half a step.
             attributes.zIndex = Int((2 - min(distance, 2)) * 10_000) * 2 + (position <= 0 ? 1 : 0)
+        case .posterStack:
+            guard scrollDirection == .horizontal else { return }
+            let distance = abs(position)
+            let progress = min(distance, 1)
+            let scale = 1 - (1 - self.minimumScale) * progress
+            let tilt = min(max(position, -1), 1) * self.rotationAngle
+            attributes.transform = CGAffineTransform(rotationAngle: tilt).scaledBy(x: scale, y: scale)
+            // Only the nearest cards remain visible; farther cards fade behind them.
+            let visibility = max(0, 1 - max(distance - 1, 0) * 2)
+            attributes.alpha = (1 - (1 - self.minimumAlpha) * progress) * visibility
+            attributes.zIndex = Int((1 - min(distance, 10)) * 100)
         case .grid:  // 网格布局效果
             // 网格模式下不需要特殊的变换效果
             attributes.alpha = 1.0
@@ -581,6 +598,9 @@ open class TFYSwiftPagerViewTransformer: NSObject {
             return scrollDirection == .horizontal ?
                 -size.width * 0.8 :
                 -size.height * 0.8
+        case .posterStack:
+            guard scrollDirection == .horizontal else { return 0 }
+            return -size.width * 0.72 + max(self.cardSpacing, 0)
         case .grid:
             return scrollDirection == .horizontal ?
                 (size.width + gridSpacing) / CGFloat(gridColumns) :

@@ -6,16 +6,34 @@ final class TransformersDemoViewController: DemoPagerBaseViewController {
     private let direction = UISegmentedControl(items: ["水平", "垂直"])
     private var selection = 6
     private var inspector: UILabel?
-    init() { super.init(title: "转场动画实验室") }
+    private var styleChoice: UIButton?
+    private let currentStyleLabel = UILabel()
+    init(styleIndex: Int = 6) {
+        selection = styleIndex
+        super.init(title: "转场动画实验室")
+    }
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
     override func configureDemo() {
-        describe("21 种内置样式，加上无转场和自定义 Transformer。只展示当前样式相关的参数。")
+        describe("\(types.count) 种内置样式，加上无转场和自定义 Transformer。使用上一种 / 下一种逐项体验。")
+        pagerView.register(DemoPosterCell.self, forCellWithReuseIdentifier: "poster")
         useCardSize(width: 0.78, height: 0.84)
         let styles = addSection("选择样式", detail: "部分转场仅支持水平；不兼容时，垂直选项会禁用。")
-        styles.addArrangedSubview(makeChoiceRow(title: "转场样式", options: ["无转场"] + types.map(\.displayName) + ["自定义倾斜"], selected: selection) { [weak self] in
-            self?.selectStyle(at: $0)
-        })
+        let choice = makeChoiceRow(title: "转场样式", options: styleNames, selected: selection) { [weak self] in self?.selectStyle(at: $0) }
+        styleChoice = choice
+        styles.addArrangedSubview(choice)
+        currentStyleLabel.font = .preferredFont(forTextStyle: .subheadline)
+        currentStyleLabel.adjustsFontForContentSizeCategory = true
+        currentStyleLabel.numberOfLines = 0
+        currentStyleLabel.accessibilityIdentifier = "style.current"
+        styles.addArrangedSubview(currentStyleLabel)
+        let navigation = UIStackView(arrangedSubviews: [
+            makeButton("上一种卡片") { [weak self] in self?.step(-1) },
+            makeButton("下一种卡片") { [weak self] in self?.step(1) }
+        ])
+        navigation.spacing = 12
+        navigation.distribution = .fillEqually
+        styles.addArrangedSubview(navigation)
         direction.selectedSegmentIndex = 0
         direction.accessibilityIdentifier = "转场方向"
         direction.heightAnchor.constraint(greaterThanOrEqualToConstant: 44).isActive = true
@@ -42,6 +60,9 @@ final class TransformersDemoViewController: DemoPagerBaseViewController {
         applySelection()
     }
 
+    private var styleNames: [String] { ["无转场"] + types.map(\.displayName) + ["自定义倾斜"] }
+    private func step(_ delta: Int) { selectStyle(at: (selection + delta + styleNames.count) % styleNames.count) }
+
     func selectStyle(at index: Int) {
         guard (0...types.count + 1).contains(index) else { return }
         selection = index
@@ -49,6 +70,11 @@ final class TransformersDemoViewController: DemoPagerBaseViewController {
     }
 
     private func applySelection() {
+        currentStyleLabel.text = "\(selection + 1) / \(styleNames.count) · \(styleNames[selection])"
+        styleChoice?.configuration?.title = "转场样式：\(styleNames[selection])"
+        for (index, item) in (styleChoice?.menu?.children ?? []).enumerated() {
+            (item as? UIAction)?.state = index == selection ? .on : .off
+        }
         for view in parameterRows.arrangedSubviews { parameterRows.removeArrangedSubview(view); view.removeFromSuperview() }
         let transformer: TFYSwiftPagerViewTransformer?
         if selection == 0 { transformer = nil }
@@ -84,6 +110,7 @@ final class TransformersDemoViewController: DemoPagerBaseViewController {
             case .accordion: values = [("accordionFactor", \.accordionFactor, 0, 1)]
             case .carousel: values = [("carouselRadius", \.carouselRadius, 20, 600), ("perspective", \.perspective, -0.01, 0)]
             case .stack: values = [("stackOffset", \.stackOffset, 0, 48)]
+            case .posterStack: values = [("minimumScale", \.minimumScale, 0.7, 1), ("minimumAlpha", \.minimumAlpha, 0.2, 1), ("rotationAngle", \.rotationAngle, 0, 0.35), ("cardSpacing", \.cardSpacing, 0, 36)]
             case .grid:
                 parameterRows.addArrangedSubview(makeSliderRow(title: "gridRows", value: 2, min: 1, max: 4, step: 1) { [weak self] in self?.pagerView.transformer?.gridRows = Int($0.rounded()); self?.updatePageCount() })
                 parameterRows.addArrangedSubview(makeSliderRow(title: "gridColumns", value: 3, min: 1, max: 5, step: 1) { [weak self] in self?.pagerView.transformer?.gridColumns = Int($0.rounded()); self?.updatePageCount() })
@@ -103,6 +130,14 @@ final class TransformersDemoViewController: DemoPagerBaseViewController {
         }
         parameterRows.addArrangedSubview(makeSliderRow(title: "卡片间距（由 Transformer 决定是否覆盖）", value: Float(pagerView.interitemSpacing), min: 0, max: 40) { [weak self] in self?.pagerView.interitemSpacing = CGFloat($0) })
         setStatus("\(transformer.type.displayName) · \(vertical ? "支持水平与垂直" : "仅支持水平")")
+    }
+
+    override func pagerView(_ pagerView: TFYSwiftPagerView, cellForItemAt index: Int) -> TFYSwiftPagerViewCell {
+        guard pagerView.transformer?.type == .posterStack else { return super.pagerView(pagerView, cellForItemAt: index) }
+        let cell = pagerView.dequeueReusableCell(withReuseIdentifier: "poster", at: index) as! DemoPosterCell
+        cell.configure(imageName: imageNames[index], title: "海报 \(index + 1)")
+        cell.onPlay = { [weak self] in self?.setStatus("已点击海报 \(index + 1) 的播放按钮") }
+        return cell
     }
 
     private func inspectLayout() {

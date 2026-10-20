@@ -9,6 +9,10 @@ final class DemoMenuViewController: UITableViewController, UISearchResultsUpdati
         let factory: () -> UIViewController
     }
     private let groups: [(String, [Item])] = [
+        ("卡片类型总览", [
+            Item(id: "gallery", title: "全部卡片类型", subtitle: "逐项预览全部内置类型 · 默认与自定义", symbol: "rectangle.stack", factory: { DemoCardGalleryViewController() }),
+            Item(id: "poster", title: "海报层叠", subtitle: "中间突出 · 两侧倾斜 · 独立播放按钮", symbol: "play.rectangle.fill", factory: { PosterStackDemoViewController() })
+        ]),
         ("入门与交互", [
             Item(id: "basic", title: "基础轮播", subtitle: "卡片尺寸 · 间距 · 空数据与重载", symbol: "rectangle.on.rectangle", factory: { BasicBannerDemoViewController() }),
             Item(id: "autoplay", title: "无限循环与自动轮播", subtitle: "单页行为 · 前后台 · 暂停与恢复", symbol: "repeat", factory: { InfiniteAutoplayDemoViewController() }),
@@ -16,7 +20,7 @@ final class DemoMenuViewController: UITableViewController, UISearchResultsUpdati
             Item(id: "control", title: "外观与编程控制", subtitle: "四边边距 · 选择定位 · KVO · Cell 查询", symbol: "slider.horizontal.3", factory: { ChromeControlDemoViewController() })
         ]),
         ("布局与转场", [
-            Item(id: "transformers", title: "转场动画实验室", subtitle: "21 种样式 · 全部参数 · 自定义扩展", symbol: "sparkles.rectangle.stack", factory: { TransformersDemoViewController() }),
+            Item(id: "transformers", title: "转场动画实验室", subtitle: "\(PagerViewTransformerType.allCases.count) 种样式 · 全部参数 · 自定义扩展", symbol: "sparkles.rectangle.stack", factory: { TransformersDemoViewController() }),
             Item(id: "vertical", title: "垂直滚动", subtitle: "方向兼容 · 上下翻页 · 垂直回弹", symbol: "arrow.up.arrow.down", factory: { VerticalScrollDemoViewController() }),
             Item(id: "grid", title: "网格分页", subtitle: "行列与间距 · 双向分页 · 按项定位", symbol: "square.grid.2x2", factory: { GridLayoutDemoViewController() })
         ]),
@@ -65,7 +69,7 @@ final class DemoMenuViewController: UITableViewController, UISearchResultsUpdati
         title.adjustsFontForContentSizeCategory = true
         title.numberOfLines = 0
         let detail = UILabel()
-        detail.text = "iOS 16+  /  Swift Package Manager\n10 个交互场景，从基础轮播到自定义转场。\n打开场景，边调整参数，边观察预览。"
+        detail.text = "iOS 16+  /  Swift Package Manager\n\(PagerViewTransformerType.allCases.count) 种内置卡片，\(groups.reduce(0) { $0 + $1.1.count }) 个交互场景。\n从全部卡片类型进入，逐项浏览真实预览。"
         detail.font = .preferredFont(forTextStyle: .subheadline)
         detail.adjustsFontForContentSizeCategory = true
         detail.textColor = .secondaryLabel

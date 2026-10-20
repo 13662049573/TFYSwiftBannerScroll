@@ -55,7 +55,7 @@ class DemoPagerBaseViewController: UIViewController, TFYSwiftPagerViewDataSource
         super.viewDidLayoutSubviews()
         let compact = view.bounds.height < 450
         subtitleLabel.isHidden = compact
-        previewHeight.constant = compact ? 100 : min(260, max(160, view.bounds.height * 0.28))
+        previewHeight.constant = preferredPreviewHeight(availableHeight: view.bounds.height, compact: compact)
         if pagerView.bounds.size != lastPreviewSize {
             lastPreviewSize = pagerView.bounds.size
             updateCardSize()
@@ -71,6 +71,10 @@ class DemoPagerBaseViewController: UIViewController, TFYSwiftPagerViewDataSource
             pagerView.trailingAnchor.constraint(equalTo: preview.trailingAnchor),
             pagerView.bottomAnchor.constraint(equalTo: preview.bottomAnchor)
         ])
+    }
+
+    func preferredPreviewHeight(availableHeight: CGFloat, compact: Bool) -> CGFloat {
+        compact ? 100 : min(260, max(160, availableHeight * 0.28))
     }
 
     func configureDemo() {}

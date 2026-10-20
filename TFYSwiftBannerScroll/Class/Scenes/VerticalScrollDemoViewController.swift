@@ -9,7 +9,7 @@ final class VerticalScrollDemoViewController: DemoPagerBaseViewController {
         useCardSize(width: 0.92, height: 0.7)
         pagerView.scrollDirection = .vertical
         pagerView.isInfinite = true
-        let styles = addSection("垂直布局", detail: "仅水平：overlap、linear、coverFlow、ferrisWheel、invertedFerrisWheel。")
+        let styles = addSection("垂直布局", detail: "仅水平：overlap、linear、coverFlow、ferrisWheel、invertedFerrisWheel、posterStack。")
         styles.addArrangedSubview(makeChoiceRow(title: "垂直转场", options: ["无转场"] + types.map(\.displayName)) { [weak self] index in
             guard let self else { return }
             self.pagerView.isPagingEnabled = false

@@ -500,7 +500,7 @@ final class TFYSwiftBannerScrollTests: XCTestCase {
 
     func testEveryBuiltInTransformerProducesFiniteLayoutAttributes() {
         let f = makePager()
-        XCTAssertEqual(PagerViewTransformerType.allCases.count, 21)
+        XCTAssertEqual(PagerViewTransformerType.allCases.count, 22)
         for type in PagerViewTransformerType.allCases {
             f.pager.transformer = TFYSwiftPagerViewTransformer(type: type)
             f.collection.layoutIfNeeded()
@@ -512,6 +512,35 @@ final class TFYSwiftBannerScrollTests: XCTestCase {
                 XCTAssertTrue(item.transform3D.m11.isFinite && item.transform3D.m44.isFinite, type.displayName)
             }
         }
+    }
+
+    func testPosterStackKeepsCenterProminentAndTiltsOnlyNeighbours() {
+        let f = makePager()
+        let transformer = TFYSwiftPagerViewTransformer(type: .posterStack)
+        f.pager.transformer = transformer
+        func attributes(_ position: CGFloat) -> TFYSwiftPagerViewLayoutAttributes {
+            let value = TFYSwiftPagerViewLayoutAttributes(forCellWith: IndexPath(item: 0, section: 0))
+            value.size = CGSize(width: 280, height: 370)
+            value.position = position
+            transformer.applyTransform(to: value)
+            return value
+        }
+        let center = attributes(0)
+        let left = attributes(-1)
+        let right = attributes(1)
+        XCTAssertEqual(center.transform, .identity)
+        XCTAssertEqual(center.alpha, 1)
+        XCTAssertLessThan(left.transform.b, 0)
+        XCTAssertGreaterThan(right.transform.b, 0)
+        XCTAssertEqual(left.alpha, 0.55, accuracy: 0.0001)
+        XCTAssertEqual(right.alpha, left.alpha)
+        XCTAssertGreaterThan(center.zIndex, right.zIndex)
+        XCTAssertEqual(attributes(2).alpha, 0)
+        XCTAssertFalse(PagerViewTransformerType.posterStack.supportsVertical)
+        XCTAssertEqual(PagerViewTransformerType.grid.rawValue, 20)
+        XCTAssertEqual(PagerViewTransformerType.posterStack.rawValue, 21)
+        f.pager.itemSize = CGSize(width: 280, height: 370)
+        XCTAssertEqual(transformer.proposedInteritemSpacing(), -191.6, accuracy: 0.001)
     }
 
     #if !SWIFT_PACKAGE
@@ -526,7 +555,7 @@ final class TFYSwiftBannerScrollTests: XCTestCase {
             if view is UISlider, let identifier = view.accessibilityIdentifier { exposed.insert(identifier) }
             view.subviews.forEach(visit)
         }
-        for index in 0...22 {
+        for index in 0...PagerViewTransformerType.allCases.count + 1 {
             scene.selectStyle(at: index)
             scene.view.layoutIfNeeded()
             visit(scene.controlsContainer)
@@ -534,6 +563,60 @@ final class TFYSwiftBannerScrollTests: XCTestCase {
         let required: Set<String> = ["minimumScale", "minimumAlpha", "perspective", "springDamping", "parallaxFactor", "rotationAngle", "waveHeight", "cylinderRadius", "flipAngle", "cardSpacing", "windmillSpeed", "accordionFactor", "carouselRadius", "stackOffset", "gridRows", "gridColumns", "gridSpacing"]
         XCTAssertTrue(required.isSubset(of: exposed), "Missing controls: \(required.subtracting(exposed))")
         XCTAssertTrue(scene.pagerView.transformer is DemoTiltTransformer)
+        window.isHidden = true
+        window.rootViewController = nil
+    }
+
+    func testGalleryCreatesAnIndependentLivePreviewForEveryCardType() {
+        let styles = DemoCardGalleryViewController.styles
+        XCTAssertEqual(styles.compactMap(\.type), PagerViewTransformerType.allCases)
+        XCTAssertEqual(styles.count, PagerViewTransformerType.allCases.count + 2)
+        XCTAssertEqual(Set(styles.map(\.identifier)).count, styles.count)
+        let scene = DemoCardGalleryViewController()
+        scene.loadViewIfNeeded()
+        XCTAssertEqual(scene.tableView(scene.tableView, numberOfRowsInSection: 0), styles.count)
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
+        defer { window.isHidden = true }
+        for style in styles {
+            let cell = DemoCardGalleryCell(style: .default, reuseIdentifier: "test")
+            cell.configure(style: style)
+            cell.frame = CGRect(x: 0, y: 0, width: 360, height: 460)
+            window.addSubview(cell)
+            cell.layoutIfNeeded()
+            cell.pager.layoutIfNeeded()
+            XCTAssertEqual(cell.pager.transformer?.type, style.isCustom ? .zoomOut : style.type, style.name)
+            if let type = style.type {
+                let detail = TransformersDemoViewController(styleIndex: style.selectionIndex)
+                detail.loadViewIfNeeded()
+                XCTAssertEqual(detail.pagerView.transformer?.type, type, style.name)
+            }
+            XCTAssertEqual(cell.pager.accessibilityIdentifier, "preview.\(style.name)")
+            XCTAssertNotNil(cell.pager.cellForItem(at: 0), style.name)
+            cell.setAutoplay(true)
+            cell.prepareForReuse()
+            XCTAssertEqual(cell.pager.automaticSlidingInterval, 0)
+            cell.removeFromSuperview()
+        }
+    }
+
+    func testPosterDemoHasRoundedCellAndIndependentPlayCallback() {
+        let scene = PosterStackDemoViewController()
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
+        window.rootViewController = scene
+        window.makeKeyAndVisible()
+        scene.loadViewIfNeeded()
+        scene.view.layoutIfNeeded()
+        scene.pagerView.layoutIfNeeded()
+        let cell = scene.pagerView.cellForItem(at: 0) as! DemoPosterCell
+        XCTAssertEqual(cell.contentView.layer.cornerRadius, 24)
+        let play = cell.contentView.subviews.compactMap { $0 as? UIButton }.first!
+        XCTAssertEqual(play.accessibilityIdentifier, "poster.play")
+        var clicked = false
+        cell.onPlay = { clicked = true }
+        play.sendActions(for: .touchUpInside)
+        XCTAssertTrue(clicked)
+        cell.prepareForReuse()
+        XCTAssertNil(cell.onPlay)
         window.isHidden = true
         window.rootViewController = nil
     }

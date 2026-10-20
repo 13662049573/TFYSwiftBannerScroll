@@ -11,12 +11,15 @@ final class TFYSwiftBannerScrollUITests: XCTestCase {
     private func open(_ id: String) {
         let cell = app.cells["demo.\(id)"]
         for _ in 0..<10 {
-            if cell.exists && cell.isHittable { break }
+            let top = app.navigationBars.firstMatch.frame.maxY
+            let bottom = app.frame.maxY - 110 // Keep the tap above the floating search field.
+            if cell.exists && cell.isHittable && cell.frame.minY >= top && cell.frame.maxY <= bottom { break }
             app.tables["demo.menu"].swipeUp()
         }
         XCTAssertTrue(cell.waitForExistence(timeout: 3))
         cell.tap()
-        XCTAssertTrue(app.otherElements["banner.preview"].waitForExistence(timeout: 3))
+        let preview = app.descendants(matching: .any)["banner.preview"]
+        XCTAssertTrue(preview.waitForExistence(timeout: 3))
     }
     private func reveal(_ element: XCUIElement) {
         let panel = app.scrollViews["demo.parameters"]
@@ -36,7 +39,7 @@ final class TFYSwiftBannerScrollUITests: XCTestCase {
         snapshot("menu")
         for id in ["basic", "autoplay", "physics", "control", "transformers", "vertical", "grid", "indicator", "cell", "events"] {
             open(id)
-            let preview = app.otherElements["banner.preview"]
+            let preview = app.descendants(matching: .any)["banner.preview"]
             let originalY = preview.frame.minY
             app.scrollViews["demo.parameters"].swipeUp()
             XCTAssertEqual(preview.frame.minY, originalY, accuracy: 1)
@@ -66,7 +69,7 @@ final class TFYSwiftBannerScrollUITests: XCTestCase {
         reveal(direction)
         direction.tap()
         app.buttons["垂直"].tap()
-        let preview = app.otherElements["banner.preview"]
+        let preview = app.descendants(matching: .any)["banner.preview"]
         preview.swipeUp()
         snapshot("vertical-grid")
         app.navigationBars.buttons.element(boundBy: 0).tap()
@@ -74,7 +77,7 @@ final class TFYSwiftBannerScrollUITests: XCTestCase {
         let allow = app.switches["允许选择 shouldSelect"]
         reveal(allow)
         allow.tap()
-        app.otherElements["banner.preview"].tap()
+        app.descendants(matching: .any)["banner.preview"].tap()
         let log = app.textViews["delegate.log"]
         reveal(log)
         XCTAssertTrue((log.value as? String ?? "").contains("shouldSelect"))
@@ -86,7 +89,7 @@ final class TFYSwiftBannerScrollUITests: XCTestCase {
         app.launch()
         open("transformers")
         XCUIDevice.shared.orientation = .landscapeLeft
-        let preview = app.otherElements["banner.preview"]
+        let preview = app.descendants(matching: .any)["banner.preview"]
         XCTAssertTrue(preview.waitForExistence(timeout: 3))
         preview.tap() // Wait for UIKit's rotation animation and the app's idle state before capturing.
         XCTAssertGreaterThan(app.frame.width, app.frame.height)
@@ -95,4 +98,58 @@ final class TFYSwiftBannerScrollUITests: XCTestCase {
         snapshot("landscape-dark")
         XCUIDevice.shared.orientation = .portrait
     }
+    func testGalleryShowsEveryCardTypeAndOpensMatchingDetail() {
+        let entry = app.cells["demo.gallery"]
+        XCTAssertTrue(entry.waitForExistence(timeout: 3))
+        entry.tap()
+        let table = app.tables["card.gallery"]
+        XCTAssertTrue(table.waitForExistence(timeout: 3))
+        app.navigationBars.buttons["暂停预览"].tap()
+        snapshot("gallery-initial")
+        let names = ["crossFading", "zoomOut", "depth", "overlap", "linear", "coverFlow", "ferrisWheel", "invertedFerrisWheel", "cubic", "rotate3D", "parallax", "springy", "flip", "cards", "cylinder", "wave", "windmill", "accordion", "carousel", "stack", "grid", "posterStack", "plain", "custom"]
+        for name in names {
+            let preview = app.cells["gallery.\(name)"]
+            for _ in 0..<12 {
+                if preview.exists && preview.frame.intersection(app.frame).height > 230 { break }
+                let start = table.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.8))
+                let end = table.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.45))
+                start.press(forDuration: 0.02, thenDragTo: end)
+            }
+            XCTAssertTrue(preview.exists, name)
+            XCTAssertGreaterThan(preview.frame.intersection(app.frame).height, 230, name)
+            if name == "stack" {
+                let start = preview.coordinate(withNormalizedOffset: CGVector(dx: 0.75, dy: 0.5))
+                let end = preview.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5))
+                start.press(forDuration: 0.1, thenDragTo: end)
+                snapshot("stack-after-forward-drag")
+                end.press(forDuration: 0.1, thenDragTo: start)
+                snapshot("stack-after-reverse-drag")
+                XCTAssertTrue(table.exists)
+            }
+            if name == "posterStack" || name == "crossFading" { snapshot("gallery-\(name)") }
+        }
+        let custom = app.buttons["details.custom"]
+        for _ in 0..<4 {
+            if custom.isHittable { break }; table.swipeUp()
+        }
+        custom.tap()
+        XCTAssertTrue(app.staticTexts["style.current"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["style.current"].label.contains("自定义倾斜"))
+        app.buttons["上一种卡片"].tap()
+        XCTAssertTrue(app.staticTexts["style.current"].label.contains("海报层叠"))
+        app.buttons["下一种卡片"].tap()
+        XCTAssertTrue(app.staticTexts["style.current"].label.contains("自定义倾斜"))
+    }
+
+    func testScreenshotStylePosterDeckAndPlayButton() {
+        open("poster")
+        let play = app.buttons["播放海报 1"].firstMatch
+        XCTAssertTrue(play.waitForExistence(timeout: 3))
+        play.tap()
+        XCTAssertTrue(app.staticTexts["demo.status"].label.contains("已点击海报 1"))
+        snapshot("poster-stack")
+        app.descendants(matching: .any)["banner.preview"].swipeLeft()
+        XCTAssertTrue(app.buttons.matching(identifier: "poster.play").count > 0)
+    }
+
 }
