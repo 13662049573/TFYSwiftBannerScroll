@@ -87,18 +87,78 @@ open class TFYSwiftPagerViewTransformer: NSObject {
             self.pagerView?.invalidateTransformerLayout()
         }
     }
-    @objc open var perspective: CGFloat = -0.002  // 3D透视参数
-    @objc open var springDamping: CGFloat = 0.8   // 弹性动画阻尼系数
-    @objc open var parallaxFactor: CGFloat = 0.5  // 视差强度系数
-    @objc open var rotationAngle: CGFloat = .pi/2 // 3D旋转角度基数
-    @objc open var waveHeight: CGFloat = 50.0  // 波浪效果的高度
-    @objc open var cylinderRadius: CGFloat = 200.0  // 圆柱体效果的半径
-    @objc open var flipAngle: CGFloat = .pi  // 翻转角度
-    @objc open var cardSpacing: CGFloat = 10.0  // 卡片间距
-    @objc open var windmillSpeed: CGFloat = 1.0    // 风车旋转速度
-    @objc open var accordionFactor: CGFloat = 0.8  // 手风琴折叠系数
-    @objc open var carouselRadius: CGFloat = 300.0 // 旋转木马半径
-    @objc open var stackOffset: CGFloat = 8.0      // 堆叠偏移量
+    @objc open var perspective: CGFloat = -0.002 { // 3D透视参数
+        didSet {
+            self.perspective = self.perspective.isFinite ? self.perspective : -0.002
+            self.pagerView?.invalidateTransformerLayout()
+        }
+    }
+    @objc open var springDamping: CGFloat = 0.8 { // 弹性动画阻尼系数
+        didSet {
+            self.springDamping = self.springDamping.isFinite ? min(max(self.springDamping, 0), 1) : 0.8
+            self.pagerView?.invalidateTransformerLayout()
+        }
+    }
+    @objc open var parallaxFactor: CGFloat = 0.5 { // 视差强度系数
+        didSet {
+            self.parallaxFactor = self.parallaxFactor.isFinite ? max(self.parallaxFactor, 0) : 0.5
+            self.pagerView?.invalidateTransformerLayout()
+        }
+    }
+    @objc open var rotationAngle: CGFloat = .pi/2 { // 3D旋转角度基数
+        didSet {
+            self.rotationAngle = self.rotationAngle.isFinite ? self.rotationAngle : .pi/2
+            self.pagerView?.invalidateTransformerLayout()
+        }
+    }
+    @objc open var waveHeight: CGFloat = 50.0 { // 波浪效果的高度
+        didSet {
+            self.waveHeight = self.waveHeight.isFinite ? self.waveHeight : 50.0
+            self.pagerView?.invalidateTransformerLayout()
+        }
+    }
+    @objc open var cylinderRadius: CGFloat = 200.0 { // 圆柱体效果的半径
+        didSet {
+            self.cylinderRadius = self.cylinderRadius.isFinite ? max(self.cylinderRadius, 0) : 200.0
+            self.pagerView?.invalidateTransformerLayout()
+        }
+    }
+    @objc open var flipAngle: CGFloat = .pi { // 翻转角度
+        didSet {
+            self.flipAngle = self.flipAngle.isFinite ? self.flipAngle : .pi
+            self.pagerView?.invalidateTransformerLayout()
+        }
+    }
+    @objc open var cardSpacing: CGFloat = 10.0 { // 卡片间距
+        didSet {
+            self.cardSpacing = self.cardSpacing.isFinite ? max(self.cardSpacing, 0) : 10.0
+            self.pagerView?.invalidateTransformerLayout()
+        }
+    }
+    @objc open var windmillSpeed: CGFloat = 1.0 { // 风车旋转速度
+        didSet {
+            self.windmillSpeed = self.windmillSpeed.isFinite ? self.windmillSpeed : 1.0
+            self.pagerView?.invalidateTransformerLayout()
+        }
+    }
+    @objc open var accordionFactor: CGFloat = 0.8 { // 手风琴折叠系数
+        didSet {
+            self.accordionFactor = self.accordionFactor.isFinite ? min(max(self.accordionFactor, 0), 1) : 0.8
+            self.pagerView?.invalidateTransformerLayout()
+        }
+    }
+    @objc open var carouselRadius: CGFloat = 300.0 { // 旋转木马半径
+        didSet {
+            self.carouselRadius = self.carouselRadius.isFinite ? max(self.carouselRadius, 0) : 300.0
+            self.pagerView?.invalidateTransformerLayout()
+        }
+    }
+    @objc open var stackOffset: CGFloat = 8.0 { // 堆叠偏移量
+        didSet {
+            self.stackOffset = self.stackOffset.isFinite ? max(self.stackOffset, 0) : 8.0
+            self.pagerView?.invalidateTransformerLayout()
+        }
+    }
     @objc open var gridRows: Int = 2 {
         didSet {
             self.gridRows = max(self.gridRows, 1)

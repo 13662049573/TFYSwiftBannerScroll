@@ -498,6 +498,41 @@ final class TFYSwiftBannerScrollTests: XCTestCase {
         }
     }
 
+    func testAllTransformerParametersInvalidateLayoutAndRejectNonfiniteValues() {
+        let f = makePager()
+        let transformer = TFYSwiftPagerViewTransformer(type: .cards)
+        f.pager.transformer = transformer
+        f.pager.scrollToItem(at: 3, animated: false)
+        let parameters: [ReferenceWritableKeyPath<TFYSwiftPagerViewTransformer, CGFloat>] = [
+            \.minimumScale, \.minimumAlpha, \.perspective, \.springDamping, \.parallaxFactor,
+            \.rotationAngle, \.waveHeight, \.cylinderRadius, \.flipAngle, \.cardSpacing,
+            \.windmillSpeed, \.accordionFactor, \.carouselRadius, \.stackOffset, \.gridSpacing
+        ]
+        for key in parameters {
+            for value in [CGFloat.nan, .infinity, -.infinity, 0.5] {
+                f.collection.layoutIfNeeded()
+                XCTAssertFalse(f.layout.needsReprepare)
+                transformer[keyPath: key] = value
+                XCTAssertTrue(transformer[keyPath: key].isFinite)
+                XCTAssertTrue(f.layout.needsReprepare, "Parameter changes must refresh without reloadData")
+                f.collection.layoutIfNeeded()
+                XCTAssertEqual(f.pager.currentIndex, 3)
+            }
+        }
+        transformer.springDamping = 3
+        transformer.accordionFactor = -1
+        transformer.cardSpacing = -100
+        transformer.cylinderRadius = -100
+        transformer.carouselRadius = -100
+        transformer.stackOffset = -100
+        XCTAssertEqual(transformer.springDamping, 1)
+        XCTAssertEqual(transformer.accordionFactor, 0)
+        XCTAssertEqual(transformer.cardSpacing, 0)
+        XCTAssertEqual(transformer.cylinderRadius, 0)
+        XCTAssertEqual(transformer.carouselRadius, 0)
+        XCTAssertEqual(transformer.stackOffset, 0)
+    }
+
     func testEveryBuiltInTransformerProducesFiniteLayoutAttributes() {
         let f = makePager()
         XCTAssertEqual(PagerViewTransformerType.allCases.count, 22)
