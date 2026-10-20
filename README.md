@@ -19,7 +19,7 @@ Xcode → File → Add Package Dependencies，填入仓库地址：
 https://github.com/13662049573/TFYSwiftBannerScroll.git
 ```
 
-发布 `3.2.0` tag 后，选择 **Up to Next Major Version / 3.2.0**，添加产品 **TFYSwiftBannerScrollKit**。
+`3.2.0` 已发布到 [GitHub Releases](https://github.com/13662049573/TFYSwiftBannerScroll/releases/tag/3.2.0)。选择 **Up to Next Major Version / 3.2.0**，添加产品 **TFYSwiftBannerScrollKit**。
 当前工作区可直接通过 **Add Local** 选择仓库目录验证。Swift Package 的版本由 Git tag 管理，`Package.swift` 声明产品、平台和 Swift 语言模式；本地 tag 需要推送后才能用于远程版本解析。
 
 其他 Package 的清单示例：
@@ -44,7 +44,7 @@ let package = Package(
 
 ### CocoaPods
 
-对应版本发布到 CocoaPods 后：
+`3.2.0` 已登记到 CocoaPods Trunk，公开 Specs 与单个 CDN Podspec 已核验。CDN 版本索引同步状态见下方发布记录。
 
 ```ruby
 platform :ios, '16.0'
@@ -409,7 +409,24 @@ pager.transformer = poster
 
 核心库和 Demo 使用同一份源码；Package 测试目标覆盖核心行为，应用宿主测试补充 Demo 参数、注册和布局；UI 测试覆盖目录导航、27 项总览、海报播放按钮及手动拖动。测试结果与运行环境应分别记录，编译通过不能代替真机视觉验收。
 
-当前真机验证受到签名限制：现有描述文件未包含连接的 iPad，尚未完成安装和交互验收。iOS 16 真机运行、复杂转场性能仍待验证。
+真机安装、iOS 16 运行和复杂转场性能仍待验证。本轮连接的 iPad 需要解锁才能启用开发服务；此前签名验证也遇到描述文件未包含该设备的问题。
+
+### 2026-10-21 · 3.2.0 发布与总览布局修复
+
+本轮使用已公开的 `3.2.0` 标签（`0bf160b`），未移动远端标签。本地标签已对齐；Package、Podspec 和 7 个核心 Swift 文件与远端逐一校验一致。总览布局修复已在主分支的 `beca9bc`、`0a3b4c1` 提交中，晚于该标签，仅影响 Demo，不包含在已发布的 3.2.0 示例源码中。
+
+| # / 要求 | 源码 / 提交 | 场景与状态 | 证据 |
+| --- | --- | --- | --- |
+| 1 / 海报行复用时约束冲突 | `Class/Scenes/DemoCardGalleryViewController.swift:149` / `beca9bc` | 底部约束优先级设为 999，兼容表格暂时沿用 341.667 点旧行高；海报保持 300 点、按钮不小于 44 点。普通 / 海报往返复用、320 / 440 / 844 点宽度通过 | 布局回归修复前失败，修复后通过；`before.log`、`final.log`、`final.xcresult` |
+| 2 / 窗口外提前布局 | 同文件 `:54`、`:71` / `beca9bc` | 出现后才更新可见预览，访问前检查 window；窗口外读取次数由 2 降到 0 | 最终 3 项应用定向测试通过 |
+| 3 / 全类型实际交互 | `TFYSwiftBannerScrollUITests.swift:120` / `0a3b4c1` | 1 项 UI 测试通过：27 项逐项搜索、行高 / 按钮尺寸、正反拖动与详情跳转；海报截图已检查 | `final.log`（195244 bytes）、`screenshots/`；`runtime-final.log`（61320674 bytes），约束冲突 / 窗口外布局 / 未配对生命周期消息均为 0 |
+| 4 / 远程 Package 3.2.0 | `Package.swift:1` / `0bf160b` | 独立消费包按远端精确版本解析，43 项执行，41 通过、2 因缺少前台应用宿主而跳过、0 失败 | `Package.resolved` 固定 `0bf160b`；`package.log`（115585 bytes）、`package.xcresult` |
+| 5 / CocoaPods 公开发布 | `TFYSwiftBannerScrollKit.podspec:5` / `0bf160b` | 远程 Podspec lint 通过；Trunk 和公开 Specs 已出现 3.2.0，规范内容一致。发布命令返回 GitHub API 超时后先回查，未重复提交 | `spec-lint.log`（1626 bytes）、`trunk-push.log`（1566 bytes）、`trunk-spec.json`、`github-spec.json`、`cdn-follow.body` |
+| 6 / 公开 Podspec 消费 | 同上 | 独立 App 从公开 Specs Podspec 安装并编译通过，已安装的 7 个核心文件与标签一致；arm64 / x86_64 最低部署均为 iOS 16.0 | `published-spec-install.log`（830 bytes）、`pod-build.log`（354372 bytes）、`pod-deployment.txt`。此消费方式指定公开 Podspec，不能代替普通按版本解析 |
+| 7 / CocoaPods CDN 版本索引 | 公开 CDN | 暂未同步：普通 `= 3.2.0` 安装尚未解析成功；单个版本 Podspec 已可读取。保留为待复验项 | `pod-consumer-install.log`、`cdn-index-current.txt`、`cdn-index.headers` |
+| 8 / 真机与剩余诊断 | — | 真机开发服务受锁屏阻挡，真机 / iOS 16 运行未测；保留图片解码、听写与 PointerUI 信息，不宣称控制台零警告 | `device.log`；最终运行日志仍有 7 条 `CVPixelBufferCreate`、30 条听写、2 条 PointerUI 信息 |
+
+验证时间：北京时间 05:19–05:29，本机 `tianfengyou`，无业务账号；Xcode 27.1 / SDK 27.1，iPhone 18 Pro Max 与 iPad Pro 13-inch (M5) 的 iOS 27.0 模拟器。布局证据目录 `/tmp/tfy-banner-gallery-layout-20261021/`，发布证据目录 `/tmp/tfy-banner-release-3.2.0-20261021/`；汇总及完整文件大小见各目录的 `verification.json`。本轮未增加依赖、分支，也未改动现有签名设置；保留 Metal 工具链搜索路径、AppIntents 与 XCTest 平台提示。
 
 ### 2026-10-20 · 3.2.0 转场完整梳理与验证
 
