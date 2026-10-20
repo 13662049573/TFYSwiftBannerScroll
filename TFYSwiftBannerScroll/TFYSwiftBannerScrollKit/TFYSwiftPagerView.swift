@@ -205,20 +205,29 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
         get { return self.collectionView.isPagingEnabled }
     }
     
-    @objc open var parallaxFactor: CGFloat = 0.5 {
-        didSet {
-            self.transformer?.parallaxFactor = parallaxFactor
+    private var storedParallaxFactor: CGFloat = 0.5
+    private var storedRotationAngle: CGFloat = .pi / 2
+
+    /// Reads and updates the attached transformer; attach it before configuring this shortcut.
+    @objc open var parallaxFactor: CGFloat {
+        get { self.transformer?.parallaxFactor ?? self.storedParallaxFactor }
+        set {
+            self.storedParallaxFactor = newValue.isFinite ? max(newValue, 0) : 0.5
+            self.transformer?.parallaxFactor = self.storedParallaxFactor
             self.collectionViewLayout.forceInvalidate()
         }
     }
 
-    @objc open var rotationAngle: CGFloat = .pi/2 {
-        didSet {
-            self.transformer?.rotationAngle = rotationAngle
+    /// Reads and updates the attached transformer, including its type-specific default angle.
+    @objc open var rotationAngle: CGFloat {
+        get { self.transformer?.rotationAngle ?? self.storedRotationAngle }
+        set {
+            self.storedRotationAngle = newValue.isFinite ? newValue : .pi / 2
+            self.transformer?.rotationAngle = self.storedRotationAngle
             self.collectionViewLayout.forceInvalidate()
         }
     }
-    
+
     // MARK: - 公共readonly-properties
     
     /// 返回用户是否已触摸内容以启动滚动。

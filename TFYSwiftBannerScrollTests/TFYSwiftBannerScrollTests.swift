@@ -498,6 +498,24 @@ final class TFYSwiftBannerScrollTests: XCTestCase {
         }
     }
 
+    func testPagerConveniencePropertiesReadActualTransformerValues() {
+        let f = makePager()
+        let transformer = TFYSwiftPagerViewTransformer(type: .posterStack)
+        f.pager.transformer = transformer
+        XCTAssertEqual(f.pager.rotationAngle, .pi / 24, accuracy: 0.0001)
+        transformer.rotationAngle = .pi / 10
+        transformer.parallaxFactor = 1.2
+        XCTAssertEqual(f.pager.rotationAngle, .pi / 10, accuracy: 0.0001)
+        XCTAssertEqual(f.pager.parallaxFactor, 1.2)
+        f.pager.rotationAngle = .nan
+        f.pager.parallaxFactor = .infinity
+        XCTAssertEqual(f.pager.rotationAngle, transformer.rotationAngle)
+        XCTAssertTrue(f.pager.rotationAngle.isFinite)
+        XCTAssertEqual(f.pager.parallaxFactor, 0.5)
+        f.pager.transformer = nil
+        XCTAssertTrue(f.pager.rotationAngle.isFinite)
+    }
+
     func testAllTransformerParametersInvalidateLayoutAndRejectNonfiniteValues() {
         let f = makePager()
         let transformer = TFYSwiftPagerViewTransformer(type: .cards)
