@@ -25,9 +25,7 @@ open class TFYSwiftPagerViewCell: UICollectionViewCell {
         textLabel.adjustsFontForContentSizeCategory = true
         self.contentView.addSubview(view)
         view.addSubview(textLabel)
-        
-        textLabel.addObserver(self, forKeyPath: "font", options: [.old, .new], context: kvoContext)
-        
+
         _textLabel = textLabel
         return textLabel
     }
@@ -54,7 +52,6 @@ open class TFYSwiftPagerViewCell: UICollectionViewCell {
     fileprivate weak var _textLabel: UILabel?
     fileprivate weak var _imageView: UIImageView?
     
-    fileprivate let kvoContext = UnsafeMutableRawPointer(bitPattern: 0)
     fileprivate let selectionColor = UIColor(white: 0.2, alpha: 0.2)
     
     fileprivate weak var _selectedForegroundView: UIView?
@@ -125,12 +122,14 @@ open class TFYSwiftPagerViewCell: UICollectionViewCell {
         self.setNeedsLayout()
     }
     
-    deinit {
-        if let textLabel = _textLabel {
-            textLabel.removeObserver(self, forKeyPath: "font", context: kvoContext)
+    override open func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard _textLabel != nil else { return }
+        if self.traitCollection.preferredContentSizeCategory != previousTraitCollection?.preferredContentSizeCategory {
+            self.setNeedsLayout()
         }
     }
-    
+
     override open func layoutSubviews() {
         super.layoutSubviews()
         if let imageView = _imageView {
@@ -153,16 +152,6 @@ open class TFYSwiftPagerViewCell: UICollectionViewCell {
         }
     }
 
-    open override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey: Any]?, context: UnsafeMutableRawPointer?) {
-        if context == kvoContext {
-            if keyPath == "font" {
-                self.setNeedsLayout()
-            }
-        } else {
-            super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
-        }
-    }
-    
     open override func prepareForReuse() {
         super.prepareForReuse()
         self.transform = .identity

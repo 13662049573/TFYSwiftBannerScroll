@@ -244,7 +244,7 @@ final class BannerController: UIViewController, TFYSwiftPagerViewDataSource, TFY
 | `isSelected`、`isHighlighted` | 独立模拟开关；外观选择与代理真实点击 |
 | `init(frame:)`、`init(coder:)` | Class 注册和真实 Nib 注册；自定义类实现两种构造器 |
 | `layoutSubviews`、`prepareForReuse` | 默认布局与复用；自定义 Cell 清空图片、标题和 CTA 回调 |
-| `observeValue`（字体观察） | 默认 textLabel 动态字体；可在系统调整字体大小验证重新布局 |
+| `traitCollectionDidChange`（动态字体） | 默认 textLabel 使用 `preferredFont`；内容大小类别变化时重新布局 |
 
 
 ## 使用边界

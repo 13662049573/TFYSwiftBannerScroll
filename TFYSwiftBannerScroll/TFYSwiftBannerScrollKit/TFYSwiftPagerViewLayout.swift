@@ -42,18 +42,10 @@ class TFYSwiftPagerViewLayout: UICollectionViewLayout {
     
     override init() {
         super.init()
-        self.commonInit()
     }
-    
+
     required public init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
-        self.commonInit()
-    }
-    
-    deinit {
-        #if !os(tvOS)
-        NotificationCenter.default.removeObserver(self, name: UIDevice.orientationDidChangeNotification, object: nil)
-        #endif
     }
     
     override open func prepare() {
@@ -63,8 +55,9 @@ class TFYSwiftPagerViewLayout: UICollectionViewLayout {
         guard self.needsReprepare || self.collectionViewSize != collectionView.frame.size else {
             return
         }
+        let boundsSizeChanged = self.collectionViewSize != collectionView.frame.size
         self.needsReprepare = false
-        
+
         self.collectionViewSize = collectionView.frame.size
 
         // 计算基本参数/变量
@@ -120,9 +113,11 @@ class TFYSwiftPagerViewLayout: UICollectionViewLayout {
                 }
             }()
         }
-        self.adjustCollectionViewBounds()
+        if pagerView.itemSize == .zero && boundsSizeChanged {
+            self.adjustCollectionViewBounds()
+        }
     }
-    
+
     override open var collectionViewContentSize: CGSize {
         return self.contentSize
     }
@@ -325,22 +320,8 @@ class TFYSwiftPagerViewLayout: UICollectionViewLayout {
                       width: self.actualItemSize.width, height: self.actualItemSize.height)
     }
 
-    // MARK:- 通知
-    @objc
-    fileprivate func didReceiveNotification(notification: Notification) {
-        if self.pagerView?.itemSize == .zero {
-            self.adjustCollectionViewBounds()
-        }
-    }
-    
     // MARK:- 私有函数
-    
-    fileprivate func commonInit() {
-        #if !os(tvOS)
-            NotificationCenter.default.addObserver(self, selector: #selector(didReceiveNotification(notification:)), name: UIDevice.orientationDidChangeNotification, object: nil)
-        #endif
-    }
-    
+
     fileprivate func adjustCollectionViewBounds() {
         guard let collectionView = self.collectionView, let pagerView = self.pagerView else {
             return

@@ -2,7 +2,7 @@ Pod::Spec.new do |spec|
 
   spec.name         = "TFYSwiftBannerScrollKit"
 
-  spec.version      = "3.2.0"
+  spec.version      = "3.2.1"
 
   spec.summary      = "Swift 无限轮播组件：自定义 Cell、页面指示器、多种卡片转场，最低 iOS 16 / Swift 5.7+。"
 

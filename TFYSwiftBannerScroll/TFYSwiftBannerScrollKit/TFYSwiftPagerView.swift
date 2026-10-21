@@ -268,6 +268,7 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
     fileprivate var timer: Timer?
     fileprivate var isAnimating = false
     fileprivate var isTimerPausedByBackground = false
+    fileprivate var notificationObservers: [NSObjectProtocol] = []
     fileprivate var pendingGridConfiguration: (rows: Int, columns: Int, spacing: CGFloat)?
     internal var numberOfItems: Int = 0
     internal var numberOfSections: Int = 0
@@ -357,7 +358,10 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
     #endif
 
     deinit {
-        NotificationCenter.default.removeObserver(self)
+        for observer in self.notificationObservers {
+            NotificationCenter.default.removeObserver(observer)
+        }
+        self.notificationObservers.removeAll()
         self.collectionView.dataSource = nil
         self.collectionView.delegate = nil
         self.cancelTimer()
@@ -645,24 +649,38 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
         self.collectionView = collectionView
         self.collectionViewLayout = collectionViewLayout
         
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(self.handleDidEnterBackground),
-            name: UIApplication.didEnterBackgroundNotification,
-            object: nil
+        self.notificationObservers.append(
+            NotificationCenter.default.addObserver(
+                forName: UIApplication.didEnterBackgroundNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                self?.handleDidEnterBackground()
+            }
         )
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(self.handleWillEnterForeground),
-            name: UIApplication.didBecomeActiveNotification,
-            object: nil
+        self.notificationObservers.append(
+            NotificationCenter.default.addObserver(
+                forName: UIApplication.didBecomeActiveNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                self?.handleDidBecomeActive()
+            }
         )
     }
-    
+
+    fileprivate var isAutoplayAllowedByApplicationState: Bool {
+        guard !self.isTimerPausedByBackground else { return false }
+        if let scene = self.window?.windowScene {
+            return scene.activationState == .foregroundActive
+        }
+        return UIApplication.shared.applicationState == .active
+    }
+
     fileprivate func startTimer() {
         guard self.automaticSlidingInterval.isFinite, self.automaticSlidingInterval > 0,
               self.timer == nil, self.window != nil, self.numberOfItems > 1,
-              !self.isTimerPausedByBackground, UIApplication.shared.applicationState != .background,
+              self.isAutoplayAllowedByApplicationState,
               !self.collectionView.isDragging, !self.collectionView.isDecelerating else {
             return
         }
@@ -702,14 +720,12 @@ open class TFYSwiftPagerView: UIView,UICollectionViewDataSource,UICollectionView
         self.timer = nil
     }
     
-    @objc
     fileprivate func handleDidEnterBackground() {
         self.isTimerPausedByBackground = true
         self.cancelTimer()
     }
-    
-    @objc
-    fileprivate func handleWillEnterForeground() {
+
+    fileprivate func handleDidBecomeActive() {
         guard self.isTimerPausedByBackground else { return }
         self.isTimerPausedByBackground = false
         self.startTimer()
