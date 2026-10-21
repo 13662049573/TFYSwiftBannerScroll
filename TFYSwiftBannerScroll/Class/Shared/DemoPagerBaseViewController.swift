@@ -1,217 +1,343 @@
-//
-//  DemoPagerBaseViewController.swift
-//  TFYSwiftBannerScroll
-//
-
 import UIKit
 
+/// Keeps the preview visible while the parameter panel scrolls independently.
 class DemoPagerBaseViewController: UIViewController, TFYSwiftPagerViewDataSource, TFYSwiftPagerViewDelegate {
-    
-    let imageNames: [String]
-    
+    var imageNames: [String]
+    private let originalImages: [String]
+    private var cardRatios: CGSize?
+    private var lastPreviewSize: CGSize = .zero
+    private var previewHeight: NSLayoutConstraint!
+    private let preview = UIView()
+    private let subtitleLabel = UILabel()
+    private let statusLabel = UILabel()
+    private let metricsLabel = UILabel()
+    let controlsContainer = UIStackView()
+
     lazy var pagerView: TFYSwiftPagerView = {
-        let view = TFYSwiftPagerView()
-        view.translatesAutoresizingMaskIntoConstraints = false
-        view.backgroundColor = .systemBackground
-        view.dataSource = self
-        view.delegate = self
-        view.register(TFYSwiftPagerViewCell.self, forCellWithReuseIdentifier: "cell")
-        return view
+        let pager = TFYSwiftPagerView()
+        pager.translatesAutoresizingMaskIntoConstraints = false
+        pager.register(TFYSwiftPagerViewCell.self, forCellWithReuseIdentifier: "cell")
+        pager.dataSource = self
+        pager.delegate = self
+        pager.accessibilityIdentifier = "banner.preview"
+        return pager
     }()
-    
+
     lazy var pageControl: TFYSwiftPageControl = {
         let control = TFYSwiftPageControl()
         control.translatesAutoresizingMaskIntoConstraints = false
         control.numberOfPages = imageNames.count
-        control.contentHorizontalAlignment = .center
         control.setFillColor(.systemGray3, for: .normal)
-        control.setFillColor(.systemBlue, for: .selected)
+        control.setFillColor(.systemIndigo, for: .selected)
         return control
     }()
-    
-    private lazy var statusLabel: UILabel = {
-        let label = UILabel()
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.font = .preferredFont(forTextStyle: .footnote)
-        label.textColor = .secondaryLabel
-        label.numberOfLines = 0
-        label.textAlignment = .center
-        return label
-    }()
-    
-    var controlsContainer: UIStackView = {
-        let stack = UIStackView()
-        stack.axis = .vertical
-        stack.spacing = 12
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        return stack
-    }()
-    
+
     init(title: String, imageNames: [String] = DemoImages.banners) {
         self.imageNames = imageNames
+        self.originalImages = imageNames
         super.init(nibName: nil, bundle: nil)
         self.title = title
     }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemGroupedBackground
+        view.tintColor = .systemIndigo
+        navigationItem.largeTitleDisplayMode = .never
         setupBaseLayout()
         configureDemo()
+        refreshMetrics()
     }
-    
-    func configureDemo() {}
-    
-    func setStatus(_ text: String) {
-        statusLabel.text = text
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        let compact = view.bounds.height < 450
+        subtitleLabel.isHidden = compact
+        previewHeight.constant = preferredPreviewHeight(availableHeight: view.bounds.height, compact: compact)
+        if pagerView.bounds.size != lastPreviewSize {
+            lastPreviewSize = pagerView.bounds.size
+            updateCardSize()
+        }
     }
-    
-    func syncPageControl(to index: Int) {
-        guard index >= 0, index < pageControl.numberOfPages else { return }
-        pageControl.currentPage = index
-    }
-    
-    private func setupBaseLayout() {
-        let scrollView = UIScrollView()
-        scrollView.translatesAutoresizingMaskIntoConstraints = false
-        scrollView.alwaysBounceVertical = true
-        
-        let content = UIView()
-        content.translatesAutoresizingMaskIntoConstraints = false
-        
-        view.addSubview(scrollView)
-        scrollView.addSubview(content)
-        content.addSubview(pagerView)
-        content.addSubview(pageControl)
-        content.addSubview(statusLabel)
-        content.addSubview(controlsContainer)
-        
-        let guide = view.safeAreaLayoutGuide
+
+    func attachPagerAfterRemoval() {
+        guard pagerView.superview == nil else { return }
+        preview.addSubview(pagerView)
         NSLayoutConstraint.activate([
-            scrollView.topAnchor.constraint(equalTo: guide.topAnchor),
-            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            
-            content.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor),
-            content.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor),
-            content.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor),
-            content.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor),
-            content.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor),
-            
-            pagerView.topAnchor.constraint(equalTo: content.topAnchor, constant: 12),
-            pagerView.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 16),
-            pagerView.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -16),
-            pagerView.heightAnchor.constraint(equalToConstant: 220),
-            
-            pageControl.topAnchor.constraint(equalTo: pagerView.bottomAnchor, constant: 8),
-            pageControl.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 16),
-            pageControl.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -16),
-            pageControl.heightAnchor.constraint(equalToConstant: 24),
-            
-            statusLabel.topAnchor.constraint(equalTo: pageControl.bottomAnchor, constant: 8),
-            statusLabel.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 16),
-            statusLabel.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -16),
-            
-            controlsContainer.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 16),
-            controlsContainer.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 16),
-            controlsContainer.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -16),
-            controlsContainer.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -24)
+            pagerView.topAnchor.constraint(equalTo: preview.topAnchor),
+            pagerView.leadingAnchor.constraint(equalTo: preview.leadingAnchor),
+            pagerView.trailingAnchor.constraint(equalTo: preview.trailingAnchor),
+            pagerView.bottomAnchor.constraint(equalTo: preview.bottomAnchor)
         ])
     }
-    
+
+    func preferredPreviewHeight(availableHeight: CGFloat, compact: Bool) -> CGFloat {
+        compact ? 100 : min(260, max(160, availableHeight * 0.28))
+    }
+
+    func configureDemo() {}
+    func describe(_ text: String) { subtitleLabel.text = text }
+    func setStatus(_ text: String) { statusLabel.text = text; refreshMetrics() }
+
+    func useCardSize(width: CGFloat = 0.82, height: CGFloat = 0.86) {
+        cardRatios = CGSize(width: width, height: height)
+        updateCardSize()
+    }
+
+    func useAutomaticSize() { cardRatios = nil; pagerView.itemSize = .zero }
+
+    private func updateCardSize() {
+        guard let ratios = cardRatios, pagerView.bounds.width > 0 else { return }
+        let size = CGSize(width: pagerView.bounds.width * ratios.width, height: pagerView.bounds.height * ratios.height)
+        if pagerView.itemSize != size { pagerView.itemSize = size }
+    }
+
+    func setItemCount(_ count: Int) {
+        imageNames = Array(originalImages.prefix(max(count, 0)))
+        pagerView.reloadData()
+        updatePageCount()
+        setStatus("数据已更新：\(imageNames.count) 项，currentIndex = \(pagerView.currentIndex)")
+    }
+
+    var gridPageSize: Int {
+        guard let transformer = pagerView.transformer, transformer.type == .grid else { return 1 }
+        return max(transformer.gridRows * transformer.gridColumns, 1)
+    }
+
+    func updatePageCount() {
+        pageControl.numberOfPages = imageNames.isEmpty ? 0 : (imageNames.count - 1) / gridPageSize + 1
+        syncPageControl(to: pagerView.currentIndex)
+    }
+
+    func syncPageControl(to index: Int) { pageControl.currentPage = index / gridPageSize }
+
+    func refreshMetrics() {
+        guard isViewLoaded else { return }
+        metricsLabel.text = String(format: "索引 %d  ·  偏移 %.2f  ·  %@", pagerView.currentIndex,
+                                   pagerView.scrollOffset, pagerView.isTracking ? "触摸中" : "待交互")
+    }
+
+    private func setupBaseLayout() {
+        let column = UIStackView()
+        column.axis = .vertical
+        column.spacing = 12
+        column.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(column)
+        let guide = view.safeAreaLayoutGuide
+        let preferredWidth = column.widthAnchor.constraint(equalTo: guide.widthAnchor, constant: -32)
+        preferredWidth.priority = .defaultHigh
+        NSLayoutConstraint.activate([
+            column.topAnchor.constraint(equalTo: guide.topAnchor, constant: 12),
+            column.bottomAnchor.constraint(equalTo: guide.bottomAnchor),
+            column.centerXAnchor.constraint(equalTo: guide.centerXAnchor),
+            column.widthAnchor.constraint(lessThanOrEqualTo: guide.widthAnchor, constant: -32),
+            column.widthAnchor.constraint(lessThanOrEqualToConstant: 900), preferredWidth
+        ])
+
+        subtitleLabel.font = .preferredFont(forTextStyle: .subheadline)
+        subtitleLabel.adjustsFontForContentSizeCategory = true
+        subtitleLabel.textColor = .secondaryLabel
+        subtitleLabel.numberOfLines = 0
+        column.addArrangedSubview(subtitleLabel)
+        preview.backgroundColor = .secondarySystemGroupedBackground
+        preview.layer.cornerRadius = 22
+        preview.layer.cornerCurve = .continuous
+        preview.clipsToBounds = true
+        preview.addSubview(pagerView)
+        column.addArrangedSubview(preview)
+        previewHeight = preview.heightAnchor.constraint(equalToConstant: 220)
+        NSLayoutConstraint.activate([
+            previewHeight,
+            pagerView.topAnchor.constraint(equalTo: preview.topAnchor),
+            pagerView.leadingAnchor.constraint(equalTo: preview.leadingAnchor),
+            pagerView.trailingAnchor.constraint(equalTo: preview.trailingAnchor),
+            pagerView.bottomAnchor.constraint(equalTo: preview.bottomAnchor)
+        ])
+        column.addArrangedSubview(pageControl)
+        let indicatorHeight = pageControl.heightAnchor.constraint(equalToConstant: 24)
+        indicatorHeight.priority = UILayoutPriority(999)
+        indicatorHeight.isActive = true
+        let status = UIStackView(arrangedSubviews: [metricsLabel, statusLabel])
+        status.axis = .vertical
+        status.spacing = 4
+        metricsLabel.font = .preferredFont(forTextStyle: .caption1)
+        metricsLabel.textColor = .systemIndigo
+        statusLabel.font = .preferredFont(forTextStyle: .caption1)
+        statusLabel.textColor = .secondaryLabel
+        statusLabel.numberOfLines = 2
+        statusLabel.accessibilityIdentifier = "demo.status"
+        for label in [metricsLabel, statusLabel] { label.adjustsFontForContentSizeCategory = true }
+        column.addArrangedSubview(status)
+
+        let scroll = UIScrollView()
+        scroll.accessibilityIdentifier = "demo.parameters"
+        scroll.heightAnchor.constraint(greaterThanOrEqualToConstant: 72).isActive = true
+        scroll.alwaysBounceVertical = true
+        scroll.keyboardDismissMode = .onDrag
+        column.addArrangedSubview(scroll)
+        controlsContainer.axis = .vertical
+        controlsContainer.spacing = 12
+        controlsContainer.translatesAutoresizingMaskIntoConstraints = false
+        scroll.addSubview(controlsContainer)
+        NSLayoutConstraint.activate([
+            controlsContainer.topAnchor.constraint(equalTo: scroll.contentLayoutGuide.topAnchor),
+            controlsContainer.leadingAnchor.constraint(equalTo: scroll.contentLayoutGuide.leadingAnchor),
+            controlsContainer.trailingAnchor.constraint(equalTo: scroll.contentLayoutGuide.trailingAnchor),
+            controlsContainer.bottomAnchor.constraint(equalTo: scroll.contentLayoutGuide.bottomAnchor, constant: -24),
+            controlsContainer.widthAnchor.constraint(equalTo: scroll.frameLayoutGuide.widthAnchor)
+        ])
+    }
+
+    @discardableResult
+    func addSection(_ title: String, detail: String? = nil) -> UIStackView {
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.spacing = 10
+        let heading = UILabel()
+        heading.text = title
+        heading.font = .preferredFont(forTextStyle: .headline)
+        heading.adjustsFontForContentSizeCategory = true
+        heading.numberOfLines = 0
+        stack.addArrangedSubview(heading)
+        if let detail {
+            let label = UILabel()
+            label.text = detail
+            label.font = .preferredFont(forTextStyle: .caption1)
+            label.adjustsFontForContentSizeCategory = true
+            label.textColor = .secondaryLabel
+            label.numberOfLines = 0
+            stack.addArrangedSubview(label)
+        }
+        controlsContainer.addArrangedSubview(stack)
+        return stack
+    }
+
+    private func card(_ views: [UIView]) -> UIStackView {
+        let stack = UIStackView(arrangedSubviews: views)
+        stack.axis = .vertical
+        stack.spacing = 8
+        stack.isLayoutMarginsRelativeArrangement = true
+        stack.directionalLayoutMargins = NSDirectionalEdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 16)
+        stack.backgroundColor = .secondarySystemGroupedBackground
+        stack.layer.cornerRadius = 14
+        return stack
+    }
+
     func makeSwitchRow(title: String, isOn: Bool, action: @escaping (Bool) -> Void) -> UIView {
-        let row = UIStackView()
-        row.axis = .horizontal
-        row.alignment = .center
-        
         let label = UILabel()
         label.text = title
-        label.font = .systemFont(ofSize: 15)
-        
+        label.font = .preferredFont(forTextStyle: .subheadline)
+        label.adjustsFontForContentSizeCategory = true
+        label.numberOfLines = 0
         let toggle = UISwitch()
         toggle.isOn = isOn
-        toggle.addAction(UIAction { _ in action(toggle.isOn) }, for: .valueChanged)
-        
-        row.addArrangedSubview(label)
-        row.addArrangedSubview(toggle)
-        return row
+        toggle.accessibilityLabel = title
+        toggle.accessibilityIdentifier = title
+        toggle.setContentCompressionResistancePriority(.required, for: .horizontal)
+        toggle.addAction(UIAction { [weak toggle] _ in
+            guard let toggle else { return }; action(toggle.isOn)
+        }, for: .valueChanged)
+        let row = UIStackView(arrangedSubviews: [label, toggle])
+        row.spacing = 12
+        row.alignment = .center
+        row.axis = traitCollection.preferredContentSizeCategory.isAccessibilityCategory ? .vertical : .horizontal
+        row.heightAnchor.constraint(greaterThanOrEqualToConstant: 44).isActive = true
+        return card([row])
     }
-    
-    func makeSliderRow(title: String, value: Float, min: Float = 0, max: Float = 1, action: @escaping (Float) -> Void) -> UIView {
-        let container = UIStackView()
-        container.axis = .vertical
-        container.spacing = 4
-        
+
+    func makeSliderRow(title: String, value: Float, min: Float = 0, max: Float = 1, step: Float? = nil,
+                       action: @escaping (Float) -> Void) -> UIView {
         let label = UILabel()
         label.text = title
-        label.font = .systemFont(ofSize: 14)
-        label.textColor = .secondaryLabel
-        
+        label.font = .preferredFont(forTextStyle: .subheadline)
+        label.adjustsFontForContentSizeCategory = true
+        label.numberOfLines = 0
+        let valueLabel = UILabel()
+        let format = max <= 0.01 && min >= -0.01 ? "%.4f" : "%.2f"
+        valueLabel.text = String(format: format, value)
+        valueLabel.font = .monospacedDigitSystemFont(ofSize: 13, weight: .medium)
+        valueLabel.textColor = .systemIndigo
+        valueLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+        let row = UIStackView(arrangedSubviews: [label, valueLabel])
+        row.spacing = 8
         let slider = UISlider()
         slider.minimumValue = min
         slider.maximumValue = max
         slider.value = value
-        slider.addAction(UIAction { _ in action(slider.value) }, for: .valueChanged)
-        
-        container.addArrangedSubview(label)
-        container.addArrangedSubview(slider)
-        return container
+        slider.accessibilityLabel = title
+        slider.accessibilityIdentifier = title
+        slider.heightAnchor.constraint(greaterThanOrEqualToConstant: 44).isActive = true
+        slider.addAction(UIAction { [weak slider, weak valueLabel] _ in
+            guard let slider else { return }
+            if let step { slider.value = (slider.value / step).rounded() * step }
+            valueLabel?.text = String(format: format, slider.value)
+            action(slider.value)
+        }, for: .valueChanged)
+        return card([row, slider])
     }
-    
+
     func makeButton(_ title: String, action: @escaping () -> Void) -> UIButton {
-        var config = UIButton.Configuration.filled()
+        var config = UIButton.Configuration.tinted()
         config.title = title
-        config.baseBackgroundColor = .secondarySystemFill
-        config.baseForegroundColor = .label
+        config.baseForegroundColor = .systemIndigo
         config.cornerStyle = .medium
+        config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16)
         let button = UIButton(configuration: config)
+        button.titleLabel?.numberOfLines = 0
+        button.accessibilityIdentifier = title
+        button.heightAnchor.constraint(greaterThanOrEqualToConstant: 44).isActive = true
         button.addAction(UIAction { _ in action() }, for: .touchUpInside)
         return button
     }
-    
-    // MARK: - DataSource
-    
-    func numberOfItems(in pagerView: TFYSwiftPagerView) -> Int {
-        imageNames.count
+
+    func makeChoiceRow(title: String, options: [String], selected: Int = 0,
+                       action: @escaping (Int) -> Void) -> UIButton {
+        let button = makeButton("\(title)：\(options[selected])", action: {})
+        button.accessibilityIdentifier = title
+        button.showsMenuAsPrimaryAction = true
+        button.menu = UIMenu(title: title, children: options.enumerated().map { index, name in
+            UIAction(title: name, state: index == selected ? .on : .off) { [weak button] chosen in
+                for case let entry as UIAction in button?.menu?.children ?? [] { entry.state = .off }
+                chosen.state = .on
+                button?.configuration?.title = "\(title)：\(name)"
+                action(index)
+            }
+        })
+        return button
     }
-    
+
+    func addDataControls() {
+        let section = addSection("数据与重载", detail: "切换为空、单项和多项，观察索引重置与单页循环。")
+        section.addArrangedSubview(makeChoiceRow(title: "数据数量", options: ["空数据", "1 项", "3 项", "全部"], selected: 3) { [weak self] choice in
+            guard let self else { return }
+            self.setItemCount([0, 1, 3, self.originalImages.count][choice])
+        })
+        section.addArrangedSubview(makeButton("重新加载数据") { [weak self] in
+            self?.pagerView.reloadData(); self?.updatePageCount(); self?.setStatus("reloadData 已调用")
+        })
+    }
+
+    func numberOfItems(in pagerView: TFYSwiftPagerView) -> Int { imageNames.count }
+
     func pagerView(_ pagerView: TFYSwiftPagerView, cellForItemAt index: Int) -> TFYSwiftPagerViewCell {
         let cell = pagerView.dequeueReusableCell(withReuseIdentifier: "cell", at: index)
         cell.imageView?.image = DemoImages.image(named: imageNames[index])
         cell.imageView?.contentMode = .scaleAspectFill
         cell.imageView?.clipsToBounds = true
-        cell.textLabel?.text = "  Item \(index + 1)"
+        cell.textLabel?.text = "\(index + 1) / \(imageNames.count)   ·   滑动探索"
         return cell
     }
-    
-    // MARK: - Delegate (overridable)
-    
+
     func pagerView(_ pagerView: TFYSwiftPagerView, didChangeIndex index: Int) {
-        syncPageControl(to: index)
-        setStatus("currentIndex = \(index)")
+        syncPageControl(to: index); refreshMetrics()
     }
-    
     func pagerView(_ pagerView: TFYSwiftPagerView, didSelectItemAt index: Int) {
-        pagerView.deselectItem(at: index, animated: true)
-        setStatus("didSelectItemAt \(index)")
+        pagerView.deselectItem(at: index, animated: true); setStatus("点击第 \(index + 1) 项")
     }
-    
-    func pagerViewWillEndDragging(_ pagerView: TFYSwiftPagerView, targetIndex: Int) {
-        syncPageControl(to: targetIndex)
-    }
-    
-    func pagerViewDidEndScrollAnimation(_ pagerView: TFYSwiftPagerView) {
-        syncPageControl(to: pagerView.currentIndex)
-    }
-    
-    func pagerViewDidEndDecelerating(_ pagerView: TFYSwiftPagerView) {
-        syncPageControl(to: pagerView.currentIndex)
-    }
-    
-    func pagerViewDidScroll(_ pagerView: TFYSwiftPagerView) {}
+    func pagerViewWillEndDragging(_ pagerView: TFYSwiftPagerView, targetIndex: Int) { refreshMetrics() }
+    func pagerViewDidEndScrollAnimation(_ pagerView: TFYSwiftPagerView) { syncPageControl(to: pagerView.currentIndex); refreshMetrics() }
+    func pagerViewDidEndDecelerating(_ pagerView: TFYSwiftPagerView) { syncPageControl(to: pagerView.currentIndex); refreshMetrics() }
+    func pagerViewDidScroll(_ pagerView: TFYSwiftPagerView) { refreshMetrics() }
 }

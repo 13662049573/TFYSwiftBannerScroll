@@ -34,14 +34,15 @@ final class DemoBannerCell: TFYSwiftPagerViewCell {
         coverImageView.clipsToBounds = true
         coverImageView.translatesAutoresizingMaskIntoConstraints = false
         
-        titleLabel.font = .boldSystemFont(ofSize: 16)
+        titleLabel.font = .preferredFont(forTextStyle: .headline)
+        titleLabel.adjustsFontForContentSizeCategory = true
         titleLabel.textColor = .white
         titleLabel.numberOfLines = 2
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         
         actionButton.setTitle("立即查看", for: .normal)
         actionButton.setTitleColor(.white, for: .normal)
-        actionButton.backgroundColor = .systemRed
+        actionButton.backgroundColor = .systemIndigo
         actionButton.layer.cornerRadius = 16
         actionButton.translatesAutoresizingMaskIntoConstraints = false
         actionButton.addTarget(self, action: #selector(handleAction), for: .touchUpInside)
@@ -73,7 +74,7 @@ final class DemoBannerCell: TFYSwiftPagerViewCell {
             actionButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             actionButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16),
             actionButton.widthAnchor.constraint(equalToConstant: 110),
-            actionButton.heightAnchor.constraint(equalToConstant: 32)
+            actionButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 44)
         ])
     }
     

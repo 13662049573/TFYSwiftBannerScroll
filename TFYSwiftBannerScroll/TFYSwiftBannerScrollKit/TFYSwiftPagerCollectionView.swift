@@ -9,7 +9,6 @@ import UIKit
 
 class TFYSwiftPagerCollectionView: UICollectionView {
 
-    #if !os(tvOS)
     override var scrollsToTop: Bool {
         set {
             super.scrollsToTop = false
@@ -18,8 +17,7 @@ class TFYSwiftPagerCollectionView: UICollectionView {
             return false
         }
     }
-    #endif
-    
+
     override var contentInset: UIEdgeInsets {
         set {
             super.contentInset = .zero
@@ -48,16 +46,11 @@ class TFYSwiftPagerCollectionView: UICollectionView {
         self.decelerationRate = UIScrollView.DecelerationRate.fast
         self.showsVerticalScrollIndicator = false
         self.showsHorizontalScrollIndicator = false
-        if #available(iOS 10.0, *) {
-            self.isPrefetchingEnabled = false
-        }
-        if #available(iOS 11.0, *) {
-            self.contentInsetAdjustmentBehavior = .never
-        }
-        #if !os(tvOS)
-            self.scrollsToTop = false
-            self.isPagingEnabled = false
-        #endif
+        self.isPrefetchingEnabled = false
+        self.contentInsetAdjustmentBehavior = .never
+        self.selfSizingInvalidation = .disabled
+        self.scrollsToTop = false
+        self.isPagingEnabled = false
     }
 
 }
